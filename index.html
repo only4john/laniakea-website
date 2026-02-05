@@ -409,45 +409,35 @@
             const container = document.getElementById('viewer-canvas');
             if (!container) { return; }
             container.innerHTML = '';
-            const width = Math.max(1, container.clientWidth || 0);
-            const height = Math.max(1, container.clientHeight || 0);
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.borderRadius = '2rem';
-            const ctx = canvas.getContext('2d');
-            const g = ctx.createLinearGradient(0, 0, width, height);
-            g.addColorStop(0, '#0f0f0f');
-            g.addColorStop(1, '#1a0a0a');
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = 'rgba(177,43,33,0.15)';
-            for (let i = 0; i < 6; i++) {
-                const r = Math.min(width, height) * (0.05 + i * 0.08);
-                ctx.beginPath();
-                ctx.arc(width * 0.5, height * (0.3 + i * 0.08), r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.fillStyle = 'rgba(212,175,55,0.12)';
-            for (let i = 0; i < 4; i++) {
-                ctx.fillRect(width * (0.15 + i * 0.18), height * 0.55, width * 0.08, height * 0.3);
-            }
-            ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.font = Math.floor(width * 0.02) + 'px Plus Jakarta Sans, sans-serif';
-            ctx.fillText('The Digital Pou — 静态预览', 24, 36);
-            container.appendChild(canvas);
-            window.addEventListener('resize', () => {
-                const w = Math.max(1, container.clientWidth || 0);
-                const h = Math.max(1, container.clientHeight || 0);
-                if (w > 0 && h > 0) {
-                    canvas.width = w;
-                    canvas.height = h;
-                    ctx.fillStyle = g;
-                    ctx.fillRect(0, 0, w, h);
-                }
-            });
+            
+            // 使用高质量静态图片代替 Canvas 绘制，避免 Resize 丢失内容的问题
+            const img = document.createElement('img');
+            // 选用一张具有雕塑/纹理质感的 Unsplash 图片
+            img.src = 'https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?auto=format&fit=crop&q=80&w=1200'; 
+            img.alt = 'Digital Pou Visualization';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '2rem';
+            img.style.opacity = '0.8'; // 稍微降低亮度以匹配深色主题
+            
+            // 添加文字说明层
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.bottom = '2rem';
+            overlay.style.left = '2rem';
+            overlay.style.color = 'rgba(255,255,255,0.8)';
+            overlay.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+            overlay.style.fontSize = '0.9rem';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+            overlay.style.padding = '0.8rem 1.2rem';
+            overlay.style.borderRadius = '9999px';
+            overlay.style.backdropFilter = 'blur(8px)';
+            overlay.style.border = '1px solid rgba(255,255,255,0.1)';
+            overlay.innerHTML = '<span style="color: #B12B21; font-weight: bold;">●</span> &nbsp; Digital Pou — High Fidelity Scan';
+
+            container.appendChild(img);
+            container.appendChild(overlay);
         }
     </script>
 </body>
