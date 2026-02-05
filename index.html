@@ -41,8 +41,8 @@
         }
 
         .glass-effect {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
+            background: rgba(20, 20, 20, 0.85); /* Fallback for no backdrop-filter */
+            /* backdrop-filter: blur(15px); REMOVED for performance stability */
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -302,106 +302,24 @@
             initViewerCanvasStatic();
         };
 
-        // --- Hero Canvas 2D (Atmospheric Celestial Particles) - No WebGL ---
+        // --- Hero Static Background (No Animation) ---
         function initHeroScene() {
             const container = document.getElementById('hero-bg');
             if (!container) return;
             
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { alpha: true });
-            container.appendChild(canvas);
-
-            let width = window.innerWidth;
-            let height = window.innerHeight;
+            // 使用静态背景图代替 Canvas 动画，彻底释放 GPU
+            container.style.backgroundImage = 'radial-gradient(circle at center, #1a0505 0%, #000000 100%)';
             
-            function resize() {
-                width = window.innerWidth;
-                height = window.innerHeight;
-                canvas.width = width;
-                canvas.height = height;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            // Particles
-            const count = 1000; // Reduced count for stability
-            const particles = [];
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: (Math.random() - 0.5) * 2000,
-                    y: (Math.random() - 0.5) * 2000,
-                    z: (Math.random() - 0.5) * 2000,
-                    size: Math.random() * 2 + 1
-                });
-            }
-
-            let isVisible = true;
-            const io = new IntersectionObserver((entries) => {
-                if (entries[0]) { isVisible = entries[0].isIntersecting; }
-            });
-            io.observe(container);
-            document.addEventListener('visibilitychange', () => {
-                isVisible = !document.hidden;
-            });
-
-            let angleY = 0;
-            let angleZ = 0;
-            let last = performance.now();
-            const targetDelta = 1000 / 30; // Cap at 30 FPS
-
-            function animate(now) {
-                requestAnimationFrame(animate);
-                if (!isVisible) return;
-                
-                const delta = now - last;
-                if (delta < targetDelta) return;
-                last = now;
-
-                ctx.clearRect(0, 0, width, height);
-                ctx.fillStyle = '#B12B21';
-                
-                const cx = width / 2;
-                const cy = height / 2;
-                const fov = 800;
-
-                angleY += 0.0003;
-                angleZ += 0.0001;
-
-                const cosY = Math.cos(angleY);
-                const sinY = Math.sin(angleY);
-                const cosZ = Math.cos(angleZ);
-                const sinZ = Math.sin(angleZ);
-
-                for (let i = 0; i < count; i++) {
-                    const p = particles[i];
-                    
-                    // Rotate Y
-                    let x1 = p.x * cosY - p.z * sinY;
-                    let z1 = p.z * cosY + p.x * sinY;
-                    
-                    // Rotate Z
-                    let x2 = x1 * cosZ - p.y * sinZ;
-                    let y2 = p.y * cosZ + x1 * sinZ;
-
-                    // Project
-                    const scale = fov / (fov + z1 + 1000); // +1000 to push camera back
-                    
-                    if (scale > 0) {
-                        const x2d = cx + x2 * scale;
-                        const y2d = cy + y2 * scale;
-                        const s = p.size * scale;
-                        
-                        // Simple depth check
-                        if (z1 < 500) { // Don't draw if too close/behind
-                            ctx.globalAlpha = Math.max(0.1, Math.min(0.5, scale * 0.5));
-                            ctx.beginPath();
-                            ctx.arc(x2d, y2d, s, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
+            // 可选：添加一张极低透明度的静态星空图作为纹理
+            const starTexture = document.createElement('div');
+            starTexture.style.position = 'absolute';
+            starTexture.style.inset = '0';
+            starTexture.style.opacity = '0.4';
+            starTexture.style.backgroundImage = 'url("https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&q=80&w=2000")';
+            starTexture.style.backgroundSize = 'cover';
+            starTexture.style.backgroundPosition = 'center';
+            starTexture.style.mixBlendMode = 'screen';
+            container.appendChild(starTexture);
         }
 
         // --- Showcase 默认静态 2D Canvas 海报 ---
