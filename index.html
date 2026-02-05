@@ -339,11 +339,17 @@
             const container = document.getElementById('viewer-canvas');
             if (!container) return;
 
-            // 检查文件是否存在
+            // 0. 安全检查：浏览器是否禁用了 WebGL？
+            // 如果之前的崩溃导致浏览器禁用了 GPU，这里会拦截并回退到静态图，防止报错。
+            if (!isWebGLAvailable()) {
+                console.warn("WebGL is disabled or unavailable. Falling back to static image.");
+                initViewerCanvasStatic();
+                return;
+            }
+
+            // 1. 检查模型文件是否存在
             const modelFile = './rock_art.splat';
-            
             try {
-                // 先探测文件是否存在
                 const response = await fetch(modelFile, { method: 'HEAD' });
                 if (!response.ok) throw new Error("File not found");
             } catch (e) {
@@ -352,7 +358,7 @@
                 return;
             }
 
-            // 文件存在，清空容器并初始化 3D
+            // 2. 文件存在且 WebGL 可用，清空容器并初始化 3D
             container.innerHTML = '';
 
             try {
@@ -375,7 +381,7 @@
                     'scale': [1.5, 1.5, 1.5]
                 });
                 
-                // 性能优化：仅在可见时渲染
+                // 3. 性能优化：仅在可见时渲染
                 let isVisible = false;
                 const observer = new IntersectionObserver((entries) => {
                     if (entries[0]) {
@@ -396,6 +402,16 @@
             } catch (e) {
                 console.error("Viewer init failed:", e);
                 initViewerCanvasStatic();
+            }
+        }
+
+        // --- Helper: WebGL Availability Check ---
+        function isWebGLAvailable() {
+            try {
+                const canvas = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+            } catch (e) {
+                return false;
             }
         }
 
