@@ -5,8 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laniakea Intelligence | 3D Cultural Reconstruction</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Three.js removed as it caused performance issues -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> -->
+    
+    <!-- Import Maps for 3D Modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.164.0/build/three.module.js",
+            "@mkkellogg/gaussian-splats-3d": "https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.3.0/build/gaussian-splats-3d.module.js"
+        }
+    }
+    </script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
@@ -279,7 +288,10 @@
         </div>
     </footer>
 
-    <script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { Viewer } from '@mkkellogg/gaussian-splats-3d';
+
         // --- Custom Cursor ---
         const cursor = document.getElementById('cursor');
         document.addEventListener('mousemove', (e) => {
@@ -291,7 +303,7 @@
         });
 
         // --- Animations ---
-        window.onload = () => {
+        window.addEventListener('load', () => {
             const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
             tl.to("#hero-tag", { opacity: 1, y: 0, duration: 1 })
               .to("#hero-title", { opacity: 1, y: 0, duration: 1 }, "-=0.7")
@@ -299,8 +311,8 @@
               .to("#hero-cta", { opacity: 1, y: 0, duration: 1 }, "-=0.7");
 
             initHeroScene();
-            initViewerCanvasStatic();
-        };
+            initViewer3D();
+        });
 
         // --- Hero Static Background (No Animation) ---
         function initHeroScene() {
@@ -322,40 +334,102 @@
             container.appendChild(starTexture);
         }
 
-        // --- Showcase 默认静态 2D Canvas 海报 ---
-        function initViewerCanvasStatic() {
+        // --- 3D Viewer (Gaussian Splatting) ---
+        async function initViewer3D() {
             const container = document.getElementById('viewer-canvas');
-            if (!container) { return; }
-            container.innerHTML = '';
-            
-            // 使用高质量静态图片代替 Canvas 绘制，避免 Resize 丢失内容的问题
-            const img = document.createElement('img');
-            // 选用一张具有雕塑/纹理质感的 Unsplash 图片
-            img.src = 'https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?auto=format&fit=crop&q=80&w=1200'; 
-            img.alt = 'Digital Pou Visualization';
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '2rem';
-            img.style.opacity = '0.8'; // 稍微降低亮度以匹配深色主题
-            
-            // 添加文字说明层
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.bottom = '2rem';
-            overlay.style.left = '2rem';
-            overlay.style.color = 'rgba(255,255,255,0.8)';
-            overlay.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
-            overlay.style.fontSize = '0.9rem';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
-            overlay.style.padding = '0.8rem 1.2rem';
-            overlay.style.borderRadius = '9999px';
-            overlay.style.backdropFilter = 'blur(8px)';
-            overlay.style.border = '1px solid rgba(255,255,255,0.1)';
-            overlay.innerHTML = '<span style="color: #B12B21; font-weight: bold;">●</span> &nbsp; Digital Pou — High Fidelity Scan';
+            if (!container) return;
 
-            container.appendChild(img);
-            container.appendChild(overlay);
+            // 检查文件是否存在
+            const modelFile = './rock_art.splat';
+            
+            try {
+                // 先探测文件是否存在
+                const response = await fetch(modelFile, { method: 'HEAD' });
+                if (!response.ok) throw new Error("File not found");
+            } catch (e) {
+                console.warn("3D Model not found, falling back to static image:", e);
+                initViewerCanvasStatic();
+                return;
+            }
+
+            // 文件存在，清空容器并初始化 3D
+            container.innerHTML = '';
+
+            try {
+                const viewer = new Viewer({
+                    'cameraUp': [0, 1, 0],
+                    'initialCameraPosition': [0, 0, 5],
+                    'initialCameraLookAt': [0, 0, 0],
+                    'rootElement': container,
+                    'selfDrivenMode': false, // 手动控制渲染循环以优化性能
+                    'useBuiltInControls': true,
+                    'ignoreDevicePixelRatio': false,
+                    'gpuAcceleratedSort': true,
+                    'halfPrecisionCovariancesOnGPU': true,
+                });
+
+                await viewer.addSplatScene(modelFile, {
+                    'showLoadingUI': true,
+                    'position': [0, 0, 0],
+                    'rotation': [0, 0, 0],
+                    'scale': [1.5, 1.5, 1.5]
+                });
+                
+                // 性能优化：仅在可见时渲染
+                let isVisible = false;
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0]) {
+                        isVisible = entries[0].isIntersecting;
+                    }
+                }, { threshold: 0.1 });
+                observer.observe(container);
+                
+                const animate = () => {
+                    requestAnimationFrame(animate);
+                    if (isVisible) {
+                        viewer.update();
+                        viewer.render();
+                    }
+                };
+                requestAnimationFrame(animate);
+
+            } catch (e) {
+                console.error("Viewer init failed:", e);
+                initViewerCanvasStatic();
+            }
+        }
+
+        // --- Showcase 默认静态 2D Canvas 海报 (Fallback) ---
+        function initViewerCanvasStatic() {
+             const container = document.getElementById('viewer-canvas');
+             if (!container) { return; }
+             container.innerHTML = '';
+             
+             const img = document.createElement('img');
+             img.src = 'https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?auto=format&fit=crop&q=80&w=1200'; 
+             img.alt = 'Digital Pou Visualization';
+             img.style.width = '100%';
+             img.style.height = '100%';
+             img.style.objectFit = 'cover';
+             img.style.borderRadius = '2rem';
+             img.style.opacity = '0.8';
+             
+             const overlay = document.createElement('div');
+             overlay.style.position = 'absolute';
+             overlay.style.bottom = '2rem';
+             overlay.style.left = '2rem';
+             overlay.style.color = 'rgba(255,255,255,0.8)';
+             overlay.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+             overlay.style.fontSize = '0.9rem';
+             overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+             overlay.style.padding = '0.8rem 1.2rem';
+             overlay.style.borderRadius = '9999px';
+             overlay.style.backdropFilter = 'blur(8px)';
+             overlay.style.border = '1px solid rgba(255,255,255,0.1)';
+             overlay.innerHTML = '<span style="color: #B12B21; font-weight: bold;">●</span> &nbsp; Digital Pou — High Fidelity Scan';
+
+             container.appendChild(img);
+             container.appendChild(overlay);
         }
     </script>
 </body>
