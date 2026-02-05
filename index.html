@@ -335,43 +335,60 @@
         }
 
         // --- 3D Viewer (Gaussian Splatting) ---
+        // 改进策略：
+        // 1. 默认不加载 3D，只显示静态图和"开启体验"按钮。
+        // 2. 用户点击后才加载，避免页面初始化时卡死。
+        // 3. 限制渲染帧率，降低 GPU 压力。
+
+        let viewer = null;
+        let isViewerRunning = false;
+        let animationFrameId = null;
+
         async function initViewer3D() {
+            // 默认初始化静态封面
+            initViewerCanvasStatic(true);
+        }
+
+        async function loadSplatModel() {
             const container = document.getElementById('viewer-canvas');
             if (!container) return;
 
-            // 0. 安全检查：浏览器是否禁用了 WebGL？
-            // 如果之前的崩溃导致浏览器禁用了 GPU，这里会拦截并回退到静态图，防止报错。
-            if (!isWebGLAvailable()) {
-                console.warn("WebGL is disabled or unavailable. Falling back to static image.");
-                initViewerCanvasStatic();
-                return;
+            // 显示加载中状态
+            const btn = document.getElementById('load-3d-btn');
+            if (btn) {
+                btn.textContent = "Loading 3D Model...";
+                btn.disabled = true;
+                btn.style.opacity = "0.7";
             }
 
-            // 1. 检查模型文件是否存在
             const modelFile = './rock_art.splat';
-            try {
-                const response = await fetch(modelFile, { method: 'HEAD' });
-                if (!response.ok) throw new Error("File not found");
-            } catch (e) {
-                console.warn("3D Model not found, falling back to static image:", e);
-                initViewerCanvasStatic();
-                return;
-            }
-
-            // 2. 文件存在且 WebGL 可用，清空容器并初始化 3D
-            container.innerHTML = '';
 
             try {
-                const viewer = new Viewer({
+                // 检查文件 (可选，如果 server 配置了 CORS 可能失败，可以忽略)
+                try {
+                    const response = await fetch(modelFile, { method: 'HEAD' });
+                    if (!response.ok) throw new Error("File not found");
+                } catch (e) {
+                    console.warn("Model check failed, trying to load anyway...", e);
+                }
+
+                // 清空容器
+                container.innerHTML = '';
+                
+                // 初始化 Viewer
+                // 降低分辨率以提升性能: renderWidth/Height
+                viewer = new Viewer({
                     'cameraUp': [0, 1, 0],
                     'initialCameraPosition': [0, 0, 5],
                     'initialCameraLookAt': [0, 0, 0],
                     'rootElement': container,
-                    'selfDrivenMode': false, // 手动控制渲染循环以优化性能
+                    'selfDrivenMode': false, // 手动驱动
                     'useBuiltInControls': true,
-                    'ignoreDevicePixelRatio': false,
-                    'gpuAcceleratedSort': true,
+                    'gpuAcceleratedSort': true, // 开启 GPU 排序
                     'halfPrecisionCovariancesOnGPU': true,
+                    'sharedMemoryForWorkers': false, // 禁用共享内存以避免 COOP/COEP 问题导致卡死
+                    'antialias': false, // 关闭抗锯齿以提升性能
+                    'foveatedRendering': true // 尝试开启注视点渲染优化
                 });
 
                 await viewer.addSplatScene(modelFile, {
@@ -380,47 +397,59 @@
                     'rotation': [0, 0, 0],
                     'scale': [1.5, 1.5, 1.5]
                 });
+
+                isViewerRunning = true;
+                startRenderingLoop(container);
+
+            } catch (e) {
+                console.error("3D Model load failed:", e);
+                alert("Failed to load 3D model. Falling back to static image.");
+                initViewerCanvasStatic(false); // 回退，不带按钮
+            }
+        }
+
+        function startRenderingLoop(container) {
+            let lastTime = 0;
+            const fpsLimit = 30; // 锁定 30FPS
+            const interval = 1000 / fpsLimit;
+
+            // Intersection Observer 用于不可见时停止渲染
+            let isVisible = true;
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0]) isVisible = entries[0].isIntersecting;
+            }, { threshold: 0.1 });
+            observer.observe(container);
+
+            const animate = (time) => {
+                if (!isViewerRunning) return;
                 
-                // 3. 性能优化：仅在可见时渲染
-                let isVisible = false;
-                const observer = new IntersectionObserver((entries) => {
-                    if (entries[0]) {
-                        isVisible = entries[0].isIntersecting;
-                    }
-                }, { threshold: 0.1 });
-                observer.observe(container);
-                
-                const animate = () => {
-                    requestAnimationFrame(animate);
-                    if (isVisible) {
+                animationFrameId = requestAnimationFrame(animate);
+
+                if (!isVisible) return; // 不可见时不计算
+
+                const delta = time - lastTime;
+                if (delta > interval) {
+                    lastTime = time - (delta % interval);
+                    
+                    if (viewer) {
                         viewer.update();
                         viewer.render();
                     }
-                };
-                requestAnimationFrame(animate);
-
-            } catch (e) {
-                console.error("Viewer init failed:", e);
-                initViewerCanvasStatic();
-            }
-        }
-
-        // --- Helper: WebGL Availability Check ---
-        function isWebGLAvailable() {
-            try {
-                const canvas = document.createElement('canvas');
-                return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-            } catch (e) {
-                return false;
-            }
+                }
+            };
+            requestAnimationFrame(animate);
         }
 
         // --- Showcase 默认静态 2D Canvas 海报 (Fallback) ---
-        function initViewerCanvasStatic() {
+        function initViewerCanvasStatic(showButton = true) {
              const container = document.getElementById('viewer-canvas');
              if (!container) { return; }
              container.innerHTML = '';
              
+             // 容器样式
+             container.style.position = 'relative';
+             container.style.overflow = 'hidden';
+
              const img = document.createElement('img');
              img.src = 'https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?auto=format&fit=crop&q=80&w=1200'; 
              img.alt = 'Digital Pou Visualization';
@@ -428,7 +457,7 @@
              img.style.height = '100%';
              img.style.objectFit = 'cover';
              img.style.borderRadius = '2rem';
-             img.style.opacity = '0.8';
+             img.style.opacity = '0.6'; // 稍微变暗
              
              const overlay = document.createElement('div');
              overlay.style.position = 'absolute';
@@ -446,6 +475,41 @@
 
              container.appendChild(img);
              container.appendChild(overlay);
+
+             if (showButton) {
+                 const btn = document.createElement('button');
+                 btn.id = 'load-3d-btn';
+                 btn.innerText = "Load 3D Experience (Beta)";
+                 btn.style.position = 'absolute';
+                 btn.style.top = '50%';
+                 btn.style.left = '50%';
+                 btn.style.transform = 'translate(-50%, -50%)';
+                 btn.style.padding = '1rem 2rem';
+                 btn.style.backgroundColor = '#B12B21';
+                 btn.style.color = 'white';
+                 btn.style.border = 'none';
+                 btn.style.borderRadius = '2rem';
+                 btn.style.fontSize = '1rem';
+                 btn.style.fontWeight = 'bold';
+                 btn.style.cursor = 'pointer';
+                 btn.style.boxShadow = '0 10px 30px rgba(177, 43, 33, 0.4)';
+                 btn.style.transition = 'all 0.3s ease';
+                 
+                 btn.onmouseover = () => {
+                     btn.style.transform = 'translate(-50%, -52%) scale(1.05)';
+                     btn.style.boxShadow = '0 15px 40px rgba(177, 43, 33, 0.6)';
+                 };
+                 btn.onmouseout = () => {
+                     btn.style.transform = 'translate(-50%, -50%) scale(1)';
+                     btn.style.boxShadow = '0 10px 30px rgba(177, 43, 33, 0.4)';
+                 };
+                 
+                 btn.onclick = () => {
+                     loadSplatModel();
+                 };
+
+                 container.appendChild(btn);
+             }
         }
     </script>
 </body>
