@@ -2,23 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laniakea Intelligence | 3D Cultural Reconstruction</title>
+    <!-- Version: 2026-03-17 v3 with Gaussian Splatting -->
+    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Import Maps for 3D Modules -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.164.0/build/three.module.js",
-            "@mkkellogg/gaussian-splats-3d": "https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.3.0/build/gaussian-splats-3d.module.js"
-        }
-    }
-    </script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Gaussian Splatting 3D Viewer -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "gaussian-splats-3d": "https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.module.js"
+        }
+    }
+    </script>
+    <script type="module" src="viewer_v3.js"></script>
     <style>
         :root {
             --maori-red: #B12B21;
@@ -50,8 +55,8 @@
         }
 
         .glass-effect {
-            background: rgba(20, 20, 20, 0.85); /* Fallback for no backdrop-filter */
-            /* backdrop-filter: blur(15px); REMOVED for performance stability */
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -102,10 +107,15 @@
     <!-- Navigation -->
     <nav class="fixed w-full z-50 px-10 py-8 flex justify-between items-center mix-blend-difference">
         <div class="flex items-center space-x-3">
-            <svg width="40" height="40" viewBox="0 0 100 100" class="fill-current text-[#B12B21]">
-                <path d="M50 10 A40 40 0 0 1 90 50 A40 40 0 0 1 50 90 A40 40 0 0 1 10 50 A40 40 0 0 1 50 10 Z" fill="none" stroke="currentColor" stroke-width="4"/>
-                <circle cx="50" cy="50" r="15" fill="currentColor"/>
-                <path d="M50 20 L50 80 M20 50 L80 50" stroke="currentColor" stroke-width="2"/>
+            <!-- New Minimal Futuristic Logo -->
+            <svg width="45" height="45" viewBox="0 0 100 100" class="fill-current text-[#B12B21]">
+                <!-- Outer circuit ring -->
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>
+                <!-- Core Koru/Chip hybrid -->
+                <rect x="35" y="35" width="30" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M50 35 L50 25 M65 50 L75 50 M50 65 L50 75 M35 50 L25 50" stroke="currentColor" stroke-width="2"/>
+                <!-- Central Koru spiral -->
+                <path d="M50 50 Q60 50 60 60 Q60 70 50 70 Q40 70 40 60 Q40 50 50 50 Q55 50 55 55" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
             <span class="text-xl md:text-2xl font-bold tracking-[0.2em] uppercase">Laniakea <span class="font-light opacity-70">Intelligence</span></span>
         </div>
@@ -129,30 +139,40 @@
         <div id="hero-bg" class="absolute inset-0 z-0"></div>
         
         <!-- Celestial / Maori Masked Background Decor -->
+        <!-- Celestial / Maori Masked Background Decor -->
         <div class="absolute -right-40 -top-40 w-[800px] h-[800px] opacity-10 animate-rotate pointer-events-none">
             <svg viewBox="0 0 100 100" class="fill-none stroke-[#B12B21]" stroke-width="0.3">
+                <!-- Human Figure from Rock Art -->
+                <path d="M50 30 L45 35 L45 45 L50 50 L55 45 L55 35 Z M50 50 L40 65 M50 50 L60 65 M50 20 C55 20 60 25 60 30 C60 35 55 40 50 40 C45 40 40 35 40 30 C40 25 45 20 50 20" />
                 <circle cx="50" cy="50" r="48" />
                 <circle cx="50" cy="50" r="35" stroke-dasharray="2,2"/>
-                <path d="M50 2 L50 98 M2 50 L98 50" />
-                <path d="M15 15 L85 85 M15 85 L85 15" />
+                <!-- Geometric symbols from Weka Pass -->
+                <path d="M20 20 L30 30 M80 80 L70 70 M20 80 L35 65 M80 20 L65 35" />
+            </svg>
+        </div>
+        <!-- Additional Rock Art Element -->
+        <div class="absolute left-10 bottom-20 w-40 h-40 opacity-5 pointer-events-none">
+            <svg viewBox="0 0 100 100" class="fill-none stroke-[#B12B21]" stroke-width="1">
+                 <!-- Lizard/Reptile Figure -->
+                 <path d="M50 10 Q60 30 50 50 Q40 70 50 90 M50 30 L30 20 M50 30 L70 20 M50 70 L30 80 M50 70 L70 80" />
             </svg>
         </div>
 
         <div class="container mx-auto px-6 relative z-10 text-center">
-            <span class="inline-block text-[#B12B21] font-bold tracking-[0.5em] uppercase text-sm mb-6 opacity-0" id="hero-tag">Kia Ora • Laniakea Intelligence</span>
+            <span class="inline-block text-[#B12B21] font-bold tracking-[0.5em] uppercase text-sm mb-6 opacity-0" id="hero-tag">Kia Ora • Digital Sovereignty</span>
             <h1 class="text-6xl md:text-9xl font-bold mb-8 leading-none opacity-0" id="hero-title">
-                Immeasurable <br><span class="italic text-gradient font-serif">Heaven</span>
+                Digital (v3) <br><span class="italic text-gradient font-serif">Resurrection</span>
             </h1>
             <p class="text-lg md:text-xl text-white/60 max-w-3xl mx-auto mb-12 font-light tracking-wide opacity-0" id="hero-desc">
-                Digitizing the profound legacy of Māori architecture through advanced spatial intelligence 
-                and high-fidelity 3D reconstruction.
+                Specialists in photogrammetry, 3D fine modeling, and digital heritage preservation. 
+                Bridging ancient wisdom with future technology to bring history back to life.
             </p>
             <div class="flex flex-col md:flex-row items-center justify-center gap-6 opacity-0" id="hero-cta">
                 <a href="#whakaaturanga" class="px-12 py-5 bg-[#B12B21] text-white rounded-full font-bold uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all transform hover:-translate-y-1">
                     Virtual Exploration
                 </a>
                 <a href="#about" class="px-12 py-5 border border-white/20 rounded-full font-bold uppercase text-xs tracking-widest hover:bg-white/10 transition-all">
-                    Our Methodology
+                    Preservation Methods
                 </a>
             </div>
         </div>
@@ -172,10 +192,17 @@
             <div class="grid lg:grid-cols-12 gap-12 items-center">
                 <div class="lg:col-span-7 relative group">
                     <div class="absolute -inset-4 bg-gradient-to-tr from-[#B12B21]/20 to-transparent rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                    <div id="viewer-canvas" class="relative z-10"></div>
+                    <div id="scene-container" class="relative z-10 glass-effect" style="width:100%;height:70vh;border-radius:2rem;overflow:hidden;">
+                        <div id="loader" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                            <div class="text-center">
+                                <div class="w-10 h-10 border-2 border-[#B12B21] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p class="text-xs uppercase tracking-widest text-white/50">Loading Gaussian Splats...</p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="absolute top-8 left-8 z-20 flex flex-col space-y-2">
-                        <div class="bg-black/80 px-4 py-2 rounded-lg border border-white/10">
+                        <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-white/10">
                             <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Laniakea Accuracy</span>
                             <span class="text-xl font-mono">0.012mm</span>
                         </div>
@@ -184,9 +211,9 @@
 
                 <div class="lg:col-span-5 space-y-10 pl-0 lg:pl-10">
                     <div>
-                        <h3 class="text-3xl font-bold mb-6">Ancient Wisdom <br>Decoded by Intelligence</h3>
+                        <h3 class="text-3xl font-bold mb-6">Rock Art Heritage <br>Preserved in 3D</h3>
                         <p class="text-white/50 leading-relaxed mb-8">
-                            At **Laniakea Intelligence**, we treat every site as a living data-set. Our reconstruction process honors the *Mana* (prestige) of the ancestors by ensuring every digital grain of wood is captured with absolute fidelity.
+                            Using advanced photogrammetry and Gaussian splatting technology, we capture cultural heritage with sub-millimeter precision. Every texture, pigment, and crack is digitally preserved for future generations.
                         </p>
                     </div>
                     
@@ -213,8 +240,8 @@
     <section id="technology" class="py-32 bg-black overflow-hidden">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-end mb-24">
-                <h2 class="text-5xl font-bold max-w-xl">Intelligent <span class="italic text-[#B12B21]">Sovereignty</span></h2>
-                <p class="text-white/40 max-w-sm mt-8 md:mt-0">Laniakea Intelligence partners with Iwi to provide a technological bridge between past and future.</p>
+                <h2 class="text-5xl font-bold max-w-xl">Our <span class="italic text-[#B12B21]">Technology</span></h2>
+                <p class="text-white/40 max-w-sm mt-8 md:mt-0">State-of-the-art photogrammetry and 3D modeling for government heritage projects.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
@@ -224,9 +251,9 @@
                     <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Scanning">
                     <div class="relative z-20">
                         <span class="text-xs font-bold uppercase mb-2 block">Capture</span>
-                        <h4 class="text-2xl font-bold mb-4">Spatial Harvesting</h4>
+                        <h4 class="text-2xl font-bold mb-4">Photogrammetry</h4>
                         <p class="text-white/70 text-sm opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                            Using industrial LiDAR and photogrammetry to harvest billion-point clouds of historic Pa sites.
+                            Using multi-angle photography and advanced photogrammetry software to create precise 3D point clouds.
                         </p>
                     </div>
                 </div>
@@ -236,9 +263,9 @@
                     <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="AI">
                     <div class="relative z-20">
                         <span class="text-xs font-bold uppercase mb-2 block">Process</span>
-                        <h4 class="text-2xl font-bold mb-4">Cognitive Mesh</h4>
+                        <h4 class="text-2xl font-bold mb-4">3D Fine Modeling</h4>
                         <p class="text-white/70 text-sm opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                            Proprietary AI algorithms that reconstruct missing architectural elements based on tribal records.
+                            Sub-millimeter precision mesh generation and Gaussian splatting for hyper-realistic digital twins.
                         </p>
                     </div>
                 </div>
@@ -248,9 +275,9 @@
                     <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Archive">
                     <div class="relative z-20">
                         <span class="text-xs font-bold uppercase mb-2 block">Preserve</span>
-                        <h4 class="text-2xl font-bold mb-4">Sky-Vault Archive</h4>
+                        <h4 class="text-2xl font-bold mb-4">Digital Archive</h4>
                         <p class="text-white/70 text-sm opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                            Secure, tribal-owned digital vaults ensuring that cultural data never leaves the hands of its people.
+                            Secure long-term storage and interactive web delivery for government heritage preservation.
                         </p>
                     </div>
                 </div>
@@ -263,9 +290,9 @@
         <div class="absolute left-0 bottom-0 w-full h-1/2 bg-gradient-to-t from-[#B12B21]/10 to-transparent"></div>
         <div class="container mx-auto px-6 relative z-10">
             <div class="text-center mb-24">
-                <h2 class="text-6xl md:text-8xl font-bold mb-8 italic">Define the <br><span class="text-gradient">Celestial Pa</span></h2>
-                <p class="text-xl text-white/50 mb-12">Laniakea Intelligence: Where Ancient Heritage meets Infinite Innovation.</p>
-                <a href="mailto:contact@laniakea.intelligence" class="text-3xl md:text-5xl font-light hover:text-[#B12B21] transition-colors underline underline-offset-8">hello@laniakeaintelligence.com</a>
+                <h2 class="text-6xl md:text-8xl font-bold mb-8 italic">Preserve Our <br><span class="text-gradient">Heritage</span></h2>
+                <p class="text-xl text-white/50 mb-12">Laniakea Intelligence: Digital Heritage Solutions for Government & Community.</p>
+                <a href="mailto:consult@laniakea.co.nz" class="text-3xl md:text-5xl font-light hover:text-[#B12B21] transition-colors underline underline-offset-8">consult@laniakea.co.nz</a>
             </div>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12 pt-24 border-t border-white/5 text-xs font-bold tracking-widest uppercase text-white/30">
@@ -282,16 +309,13 @@
                 </div>
                 <div class="lg:col-span-2 text-right">
                     <span class="text-white block mb-4">Nā Laniakea Intelligence i hanga</span>
-                    <p>© 2024 Laniakea Intelligence Reconstruction. All Rights Reserved.</p>
+                    <p>© 2026 Laniakea Intelligence Reconstruction. All Rights Reserved.</p>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { Viewer } from '@mkkellogg/gaussian-splats-3d';
-
+    <script>
         // --- Custom Cursor ---
         const cursor = document.getElementById('cursor');
         document.addEventListener('mousemove', (e) => {
@@ -303,7 +327,7 @@
         });
 
         // --- Animations ---
-        window.addEventListener('load', () => {
+        window.onload = () => {
             const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
             tl.to("#hero-tag", { opacity: 1, y: 0, duration: 1 })
               .to("#hero-title", { opacity: 1, y: 0, duration: 1 }, "-=0.7")
@@ -311,205 +335,42 @@
               .to("#hero-cta", { opacity: 1, y: 0, duration: 1 }, "-=0.7");
 
             initHeroScene();
-            initViewer3D();
-        });
+        };
 
-        // --- Hero Static Background (No Animation) ---
+        // --- Hero Three.js (Atmospheric Celestial Particles) ---
         function initHeroScene() {
             const container = document.getElementById('hero-bg');
-            if (!container) return;
-            
-            // 使用静态背景图代替 Canvas 动画，彻底释放 GPU
-            container.style.backgroundImage = 'radial-gradient(circle at center, #1a0505 0%, #000000 100%)';
-            
-            // 可选：添加一张极低透明度的静态星空图作为纹理
-            const starTexture = document.createElement('div');
-            starTexture.style.position = 'absolute';
-            starTexture.style.inset = '0';
-            starTexture.style.opacity = '0.4';
-            starTexture.style.backgroundImage = 'url("https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&q=80&w=2000")';
-            starTexture.style.backgroundSize = 'cover';
-            starTexture.style.backgroundPosition = 'center';
-            starTexture.style.mixBlendMode = 'screen';
-            container.appendChild(starTexture);
-        }
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
 
-        // --- 3D Viewer (Gaussian Splatting) ---
-        // 改进策略：
-        // 1. 默认不加载 3D，只显示静态图和"开启体验"按钮。
-        // 2. 用户点击后才加载，避免页面初始化时卡死。
-        // 3. 限制渲染帧率，降低 GPU 压力。
-
-        let viewer = null;
-        let isViewerRunning = false;
-        let animationFrameId = null;
-
-        async function initViewer3D() {
-            // 默认初始化静态封面
-            initViewerCanvasStatic(true);
-        }
-
-        async function loadSplatModel() {
-            const container = document.getElementById('viewer-canvas');
-            if (!container) return;
-
-            // 显示加载中状态
-            const btn = document.getElementById('load-3d-btn');
-            if (btn) {
-                btn.textContent = "Loading 3D Model...";
-                btn.disabled = true;
-                btn.style.opacity = "0.7";
+            const points = [];
+            for (let i = 0; i < 7000; i++) {
+                points.push((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12);
             }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+            const mat = new THREE.PointsMaterial({ color: 0xB12B21, size: 0.012, transparent: true, opacity: 0.3 });
+            const cloud = new THREE.Points(geo, mat);
+            scene.add(cloud);
 
-            const modelFile = './rock_art.splat';
+            camera.position.z = 4;
 
-            try {
-                // 检查文件 (可选，如果 server 配置了 CORS 可能失败，可以忽略)
-                try {
-                    const response = await fetch(modelFile, { method: 'HEAD' });
-                    if (!response.ok) throw new Error("File not found");
-                } catch (e) {
-                    console.warn("Model check failed, trying to load anyway...", e);
-                }
-
-                // 清空容器
-                container.innerHTML = '';
-                
-                // 初始化 Viewer
-                // 降低分辨率以提升性能: renderWidth/Height
-                viewer = new Viewer({
-                    'cameraUp': [0, 1, 0],
-                    'initialCameraPosition': [0, 0, 5],
-                    'initialCameraLookAt': [0, 0, 0],
-                    'rootElement': container,
-                    'selfDrivenMode': false, // 手动驱动
-                    'useBuiltInControls': true,
-                    'gpuAcceleratedSort': true, // 开启 GPU 排序
-                    'halfPrecisionCovariancesOnGPU': true,
-                    'sharedMemoryForWorkers': false, // 禁用共享内存以避免 COOP/COEP 问题导致卡死
-                    'antialias': false, // 关闭抗锯齿以提升性能
-                    'foveatedRendering': true // 尝试开启注视点渲染优化
-                });
-
-                await viewer.addSplatScene(modelFile, {
-                    'showLoadingUI': true,
-                    'position': [0, 0, 0],
-                    'rotation': [0, 0, 0],
-                    'scale': [1.5, 1.5, 1.5]
-                });
-
-                isViewerRunning = true;
-                startRenderingLoop(container);
-
-            } catch (e) {
-                console.error("3D Model load failed:", e);
-                alert("Failed to load 3D model. Falling back to static image.");
-                initViewerCanvasStatic(false); // 回退，不带按钮
+            function animate() {
+                requestAnimationFrame(animate);
+                cloud.rotation.y += 0.0003;
+                cloud.rotation.z += 0.0001;
+                renderer.render(scene, camera);
             }
-        }
+            animate();
 
-        function startRenderingLoop(container) {
-            let lastTime = 0;
-            const fpsLimit = 30; // 锁定 30FPS
-            const interval = 1000 / fpsLimit;
-
-            // Intersection Observer 用于不可见时停止渲染
-            let isVisible = true;
-            const observer = new IntersectionObserver((entries) => {
-                if (entries[0]) isVisible = entries[0].isIntersecting;
-            }, { threshold: 0.1 });
-            observer.observe(container);
-
-            const animate = (time) => {
-                if (!isViewerRunning) return;
-                
-                animationFrameId = requestAnimationFrame(animate);
-
-                if (!isVisible) return; // 不可见时不计算
-
-                const delta = time - lastTime;
-                if (delta > interval) {
-                    lastTime = time - (delta % interval);
-                    
-                    if (viewer) {
-                        viewer.update();
-                        viewer.render();
-                    }
-                }
-            };
-            requestAnimationFrame(animate);
-        }
-
-        // --- Showcase 默认静态 2D Canvas 海报 (Fallback) ---
-        function initViewerCanvasStatic(showButton = true) {
-             const container = document.getElementById('viewer-canvas');
-             if (!container) { return; }
-             container.innerHTML = '';
-             
-             // 容器样式
-             container.style.position = 'relative';
-             container.style.overflow = 'hidden';
-
-             const img = document.createElement('img');
-             img.src = 'https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?auto=format&fit=crop&q=80&w=1200'; 
-             img.alt = 'Digital Pou Visualization';
-             img.style.width = '100%';
-             img.style.height = '100%';
-             img.style.objectFit = 'cover';
-             img.style.borderRadius = '2rem';
-             img.style.opacity = '0.6'; // 稍微变暗
-             
-             const overlay = document.createElement('div');
-             overlay.style.position = 'absolute';
-             overlay.style.bottom = '2rem';
-             overlay.style.left = '2rem';
-             overlay.style.color = 'rgba(255,255,255,0.8)';
-             overlay.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
-             overlay.style.fontSize = '0.9rem';
-             overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
-             overlay.style.padding = '0.8rem 1.2rem';
-             overlay.style.borderRadius = '9999px';
-             overlay.style.backdropFilter = 'blur(8px)';
-             overlay.style.border = '1px solid rgba(255,255,255,0.1)';
-             overlay.innerHTML = '<span style="color: #B12B21; font-weight: bold;">●</span> &nbsp; Digital Pou — High Fidelity Scan';
-
-             container.appendChild(img);
-             container.appendChild(overlay);
-
-             if (showButton) {
-                 const btn = document.createElement('button');
-                 btn.id = 'load-3d-btn';
-                 btn.innerText = "Load 3D Experience (Beta)";
-                 btn.style.position = 'absolute';
-                 btn.style.top = '50%';
-                 btn.style.left = '50%';
-                 btn.style.transform = 'translate(-50%, -50%)';
-                 btn.style.padding = '1rem 2rem';
-                 btn.style.backgroundColor = '#B12B21';
-                 btn.style.color = 'white';
-                 btn.style.border = 'none';
-                 btn.style.borderRadius = '2rem';
-                 btn.style.fontSize = '1rem';
-                 btn.style.fontWeight = 'bold';
-                 btn.style.cursor = 'pointer';
-                 btn.style.boxShadow = '0 10px 30px rgba(177, 43, 33, 0.4)';
-                 btn.style.transition = 'all 0.3s ease';
-                 
-                 btn.onmouseover = () => {
-                     btn.style.transform = 'translate(-50%, -52%) scale(1.05)';
-                     btn.style.boxShadow = '0 15px 40px rgba(177, 43, 33, 0.6)';
-                 };
-                 btn.onmouseout = () => {
-                     btn.style.transform = 'translate(-50%, -50%) scale(1)';
-                     btn.style.boxShadow = '0 10px 30px rgba(177, 43, 33, 0.4)';
-                 };
-                 
-                 btn.onclick = () => {
-                     loadSplatModel();
-                 };
-
-                 container.appendChild(btn);
-             }
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
     </script>
 </body>
