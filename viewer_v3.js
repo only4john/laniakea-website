@@ -27,7 +27,7 @@ async function init() {
     useBuiltInControls: false
   });
 
-  const splatUrl = './rock_art_cropped.ply';
+  const splatUrl = './rock_art.splat';
   await viewer.addSplatScene(splatUrl, {
     progressiveLoad: true,
     showLoadingUI: false
