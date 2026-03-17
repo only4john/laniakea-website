@@ -5,7 +5,7 @@ async function init() {
   const container = document.getElementById('scene-container');
   const loader = document.getElementById('loader');
   
-  console.log('Starting Gaussian Splatting viewer...');
+  console.log('Starting Gaussian Splatting viewer (low memory mode)...');
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0d0d0e);
@@ -15,18 +15,20 @@ async function init() {
   const target = new THREE.Vector3(0.98, 0.21, 0.25);
   camera.position.copy(initialPos);
 
+  // Use conservative renderer settings to prevent GPU overload
   const renderer = new THREE.WebGLRenderer({ 
-    antialias: true,
-    powerPreference: "high-performance"
+    antialias: false,
+    powerPreference: "low-power",
+    precision: "mediump"
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1)); // Cap at 1x
   container.appendChild(renderer.domElement);
 
   const viewer = new GaussianSplats3D.Viewer({
     showStatus: true,
-    sharedMemoryForWorkers: true,
-    selfContained: true,
+    sharedMemoryForWorkers: false,
+    selfContained: false,
     renderer,
     camera,
     scene,
@@ -38,12 +40,11 @@ async function init() {
   
   try {
     await viewer.addSplatScene(splatUrl, {
-      progressiveLoad: true,
+      progressiveLoad: false,
       showLoadingUI: false,
-      controllerConfig: {
-        panSensitivity: 0.5,
-        zoomSensitivity: 0.5
-      }
+      halfPrecisionCovariance: true,
+      enableDraco: false,
+      enableKTX2: false
     });
     console.log('Splat loaded successfully!');
     
@@ -64,8 +65,15 @@ async function init() {
     mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
   });
 
-  function animate() {
+  // Reduce render frequency to save resources
+  let lastRender = 0;
+  function animate(time) {
     requestAnimationFrame(animate);
+    
+    // Limit to 30fps
+    if (time - lastRender < 33) return;
+    lastRender = time;
+    
     const tiltX = mouseX * 0.12;
     const tiltY = mouseY * 0.06;
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, initialPos.x + tiltX, 0.05);
@@ -74,7 +82,7 @@ async function init() {
     viewer.update();
     viewer.render();
   }
-  animate();
+  animate(0);
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
