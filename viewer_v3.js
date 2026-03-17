@@ -4,6 +4,8 @@ import * as GaussianSplats3D from 'gaussian-splats-3d';
 async function init() {
   const container = document.getElementById('scene-container');
   const loader = document.getElementById('loader');
+  
+  console.log('Starting Gaussian Splatting viewer...');
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0d0d0e);
@@ -13,14 +15,18 @@ async function init() {
   const target = new THREE.Vector3(0.98, 0.21, 0.25);
   camera.position.copy(initialPos);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ 
+    antialias: true,
+    powerPreference: "high-performance"
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
   const viewer = new GaussianSplats3D.Viewer({
-    showStatus: false,
-    sharedMemoryForWorkers: false,
-    selfContained: false,
+    showStatus: true,
+    sharedMemoryForWorkers: true,
+    selfContained: true,
     renderer,
     camera,
     scene,
@@ -28,10 +34,29 @@ async function init() {
   });
 
   const splatUrl = './rock_art.splat';
-  await viewer.addSplatScene(splatUrl, {
-    progressiveLoad: true,
-    showLoadingUI: false
-  });
+  console.log('Loading splat from:', splatUrl);
+  
+  try {
+    await viewer.addSplatScene(splatUrl, {
+      progressiveLoad: true,
+      showLoadingUI: false,
+      controllerConfig: {
+        panSensitivity: 0.5,
+        zoomSensitivity: 0.5
+      }
+    });
+    console.log('Splat loaded successfully!');
+    
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 500);
+    }
+  } catch (error) {
+    console.error('Failed to load splat:', error);
+    if (loader) {
+      loader.innerHTML = '<p style="color:red">Failed to load 3D model</p>';
+    }
+  }
 
   let mouseX = 0, mouseY = 0;
   window.addEventListener('mousemove', (e) => {
@@ -56,11 +81,6 @@ async function init() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
-  if (loader) {
-    loader.style.opacity = '0';
-    setTimeout(() => loader.style.display = 'none', 500);
-  }
 }
 
 init();
