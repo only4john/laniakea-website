@@ -397,7 +397,7 @@ function createDebugPanel() {
     border: 1px solid #333;
   `;
   panel.innerHTML = `
-    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.1)</div>
+    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.2)</div>
     <div id="cam-pos" style="margin:3px 0">Position: --</div>
     <div id="cam-rot" style="margin:3px 0">Rotation: --</div>
     <div id="cam-fov" style="margin:3px 0">FOV: --</div>
@@ -407,10 +407,14 @@ function createDebugPanel() {
   return panel;
 }
 
-// 更新相机参数显示
-function updateDebugPanel(camera) {
-  const pos = camera.position;
-  const rot = camera.rotation;
+// 更新相机参数显示 v4.2
+function updateDebugPanel(viewer, camera) {
+  // 必须用 viewer.getCamera() 获取实际渲染用的相机
+  const activeCamera = viewer.getCamera();
+  if (!activeCamera) return;
+  
+  const pos = activeCamera.position;
+  const rot = activeCamera.rotation;
   
   const posEl = document.getElementById('cam-pos');
   const rotEl = document.getElementById('cam-rot');
@@ -419,8 +423,8 @@ function updateDebugPanel(camera) {
   
   if (posEl) posEl.textContent = `Position: x:${pos.x.toFixed(2)}, y:${pos.y.toFixed(2)}, z:${pos.z.toFixed(2)}`;
   if (rotEl) rotEl.textContent = `Rotation: x:${rot.x.toFixed(2)}, y:${rot.y.toFixed(2)}, z:${rot.z.toFixed(2)}`;
-  if (fovEl) fovEl.textContent = `FOV: ${camera.fov.toFixed(1)}`;
-  if (zoomEl) zoomEl.textContent = `Zoom: ${camera.zoom.toFixed(1)}`;
+  if (fovEl) fovEl.textContent = `FOV: ${activeCamera.fov.toFixed(1)}`;
+  if (zoomEl) zoomEl.textContent = `Zoom: ${activeCamera.zoom.toFixed(1)}`;
 }
 
 async function initViewer() {
@@ -467,13 +471,13 @@ async function initViewer() {
     if (loader) loader.innerHTML = '<p style="color:red">Failed to load model</p>';
   }
 
-  // 创建调试面板
+  // 创建调试面板 v4.2
   createDebugPanel();
 
   function animate() {
     requestAnimationFrame(animate);
-    // 更新调试面板
-    updateDebugPanel(camera);
+    // 更新调试面板 - 传入 viewer 获取真实相机
+    updateDebugPanel(viewer, camera);
     viewer.update();
     viewer.render();
   }
