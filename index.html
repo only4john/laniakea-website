@@ -397,7 +397,7 @@ function createDebugPanel() {
     border: 1px solid #333;
   `;
   panel.innerHTML = `
-    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.2)</div>
+    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.3)</div>
     <div id="cam-pos" style="margin:3px 0">Position: --</div>
     <div id="cam-rot" style="margin:3px 0">Rotation: --</div>
     <div id="cam-fov" style="margin:3px 0">FOV: --</div>
@@ -407,10 +407,21 @@ function createDebugPanel() {
   return panel;
 }
 
-// 更新相机参数显示 v4.2
+// 更新相机参数显示 v4.3 - 兼容多种获取相机方式
 function updateDebugPanel(viewer, camera) {
-  // 必须用 viewer.getCamera() 获取实际渲染用的相机
-  const activeCamera = viewer.getCamera();
+  let activeCamera = null;
+  
+  // 尝试多种方式获取相机
+  if (viewer.getCamera) {
+    activeCamera = viewer.getCamera();
+  }
+  if (!activeCamera && viewer.camera) {
+    activeCamera = viewer.camera;
+  }
+  if (!activeCamera) {
+    activeCamera = camera; // 用我们创建的相机
+  }
+  
   if (!activeCamera) return;
   
   const pos = activeCamera.position;
