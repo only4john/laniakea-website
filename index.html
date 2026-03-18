@@ -378,6 +378,51 @@
 import * as THREE from 'three';
 import * as GaussianSplats3D from 'gaussian-splats-3d';
 
+// 创建相机参数显示面板 v4.1
+function createDebugPanel() {
+  const panel = document.createElement('div');
+  panel.id = 'camera-debug-panel';
+  panel.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 10000;
+    min-width: 240px;
+    border: 1px solid #333;
+  `;
+  panel.innerHTML = `
+    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.1)</div>
+    <div id="cam-pos" style="margin:3px 0">Position: --</div>
+    <div id="cam-rot" style="margin:3px 0">Rotation: --</div>
+    <div id="cam-fov" style="margin:3px 0">FOV: --</div>
+    <div id="cam-zoom" style="margin:3px 0">Zoom: --</div>
+  `;
+  document.body.appendChild(panel);
+  return panel;
+}
+
+// 更新相机参数显示
+function updateDebugPanel(camera) {
+  const pos = camera.position;
+  const rot = camera.rotation;
+  
+  const posEl = document.getElementById('cam-pos');
+  const rotEl = document.getElementById('cam-rot');
+  const fovEl = document.getElementById('cam-fov');
+  const zoomEl = document.getElementById('cam-zoom');
+  
+  if (posEl) posEl.textContent = `Position: x:${pos.x.toFixed(2)}, y:${pos.y.toFixed(2)}, z:${pos.z.toFixed(2)}`;
+  if (rotEl) rotEl.textContent = `Rotation: x:${rot.x.toFixed(2)}, y:${rot.y.toFixed(2)}, z:${rot.z.toFixed(2)}`;
+  if (fovEl) fovEl.textContent = `FOV: ${camera.fov.toFixed(1)}`;
+  if (zoomEl) zoomEl.textContent = `Zoom: ${camera.zoom.toFixed(1)}`;
+}
+
 async function initViewer() {
   const container = document.getElementById('scene-container');
   const loader = document.getElementById('loader');
@@ -422,8 +467,13 @@ async function initViewer() {
     if (loader) loader.innerHTML = '<p style="color:red">Failed to load model</p>';
   }
 
+  // 创建调试面板
+  createDebugPanel();
+
   function animate() {
     requestAnimationFrame(animate);
+    // 更新调试面板
+    updateDebugPanel(camera);
     viewer.update();
     viewer.render();
   }
