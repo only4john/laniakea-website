@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Version: 2026-03-17 v3 with Gaussian Splatting -->
-    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v8)</title>
+    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v7)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -365,7 +365,7 @@
             });
         }
     </script>
-    <!-- Gaussian Splatting 3D Viewer (v8) -->
+    <!-- Gaussian Splatting 3D Viewer (v7) -->
     <script type="importmap">
     {
         "imports": {
@@ -377,14 +377,42 @@
     </script>
     <script type="module">
 import * as THREE from 'three';
-import { MapControls } from 'three/addons/controls/MapControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import * as GaussianSplats3D from 'gaussian-splats-3d';
 
 const container = document.getElementById('scene-container');
 const loader = document.getElementById('loader');
 
+// Camera target (model center) & default distance
 const TARGET = new THREE.Vector3(-9.9, 2.4, -26.0);
 const DEFAULT_CAM_POS = new THREE.Vector3(-9.9, -0.1, -27.0);
+
+// Create debug panel with full camera params
+const panel = document.createElement('div');
+panel.style.cssText = `
+    position: fixed; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.9); color: #E5E1DA;
+    font-family: 'Courier New', monospace; font-size: 13px;
+    padding: 14px; border-radius: 8px; z-index: 10000;
+    min-width: 240px; border: 1px solid rgba(177,43,33,0.5);
+    backdrop-filter: blur(10px);
+`;
+panel.innerHTML = `
+    <div style="color:#D4AF37;font-weight:bold;margin-bottom:8px">🎨 Gaussian Splatting (v7)</div>
+    <div style="color:#888;font-size:11px;margin-bottom:10px">Rock Art · 118K Splats</div>
+    <div id="cam-pos"    style="margin:2px 0">📍 Position: --</div>
+    <div id="cam-fov"    style="margin:2px 0">🔍 FOV: --</div>
+    <div id="cam-azimuth" style="margin:2px 0">🧭 Azimuth: --</div>
+    <div id="cam-elev"   style="margin:2px 0">📐 Elevation: --</div>
+    <div id="cam-dist"   style="margin:2px 0">📏 Distance: --</div>
+    <div style="margin-top:10px;border-top:1px solid #333;padding-top:8px">
+        <div style="color:#555;font-size:10px;margin-bottom:6px">🖱️ Drag·Rotate &nbsp; RMB·Pan &nbsp; Scroll·Zoom</div>
+        <button id="btn-save" style="background:#B12B21;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin-right:4px">💾 Save</button>
+        <button id="btn-reset" style="background:#333;color:#E5E1DA;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:11px">🔄 Reset</button>
+    </div>
+    <div id="saved-pos" style="margin-top:8px;color:#D4AF37;font-size:11px;display:none"></div>
+`;
+document.body.appendChild(panel);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0d0d0e);
@@ -397,19 +425,13 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// MapControls: scroll=zoom, right-click=pan, left-click disabled
-const controls = new MapControls(camera, renderer.domElement);
+// OrbitControls for FULL 3D freedom
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.screenSpacePanning = true;
-controls.minDistance = 0.5;
-controls.maxDistance = 20;
+controls.minDistance = 0.1;
+controls.maxDistance = 100;
 controls.target.copy(TARGET);
-controls.mouseButtons = {
-    LEFT: null,
-    MIDDLE: THREE.MOUSE.DOLLY,
-    RIGHT: THREE.MOUSE.PAN
-};
 controls.update();
 
 const viewer = new GaussianSplats3D.Viewer({
@@ -419,13 +441,14 @@ const viewer = new GaussianSplats3D.Viewer({
     renderer,
     camera,
     scene,
-    useBuiltInControls: false
+    useBuiltInControls: false  // disable built-in, use our OrbitControls
 });
 
 viewer.addSplatScene('https://raw.githubusercontent.com/only4john/laniakea-website/b98f84b/rock_art.ply', {
     progressiveLoad: true,
     showLoadingUI: false
 }).then(() => {
+    console.log('Model loaded!');
     if (loader) {
         loader.style.opacity = '0';
         setTimeout(() => loader.style.display = 'none', 500);
@@ -435,47 +458,53 @@ viewer.addSplatScene('https://raw.githubusercontent.com/only4john/laniakea-websi
     if (loader) loader.innerHTML = '<p style="color:#B12B21;text-align:center;padding:20px">Failed to load model</p>';
 });
 
-// --- Mouse hover → smooth orbit (±10°) ---
-const MAX_DELTA = (10 / 180) * Math.PI;
-let targetRotY = 0, targetRotX = 0;
-let currentRotY = 0, currentRotX = 0;
-let isHovering = false;
+// Save / Reset functionality
+let savedCamPos = null;
+document.getElementById('btn-save').addEventListener('click', () => {
+    savedCamPos = { pos: camera.position.clone(), target: controls.target.clone() };
+    const el = document.getElementById('saved-pos');
+    el.style.display = 'block';
+    el.textContent = `💾 Saved: x:${savedCamPos.pos.x.toFixed(1)} y:${savedCamPos.pos.y.toFixed(1)} z:${savedCamPos.pos.z.toFixed(1)}`;
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+    if (savedCamPos) {
+        camera.position.copy(savedCamPos.pos);
+        controls.target.copy(savedCamPos.target);
+        controls.update();
+    } else {
+        camera.position.copy(DEFAULT_CAM_POS);
+        controls.target.copy(TARGET);
+        controls.update();
+    }
+});
 
-container.addEventListener('mouseenter', () => { isHovering = true; });
-container.addEventListener('mouseleave', () => {
-    isHovering = false;
-    targetRotY = 0;
-    targetRotX = 0;
-});
-container.addEventListener('mousemove', (e) => {
-    if (!isHovering) return;
-    const rect = container.getBoundingClientRect();
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    targetRotY = nx * MAX_DELTA;
-    targetRotX = -ny * MAX_DELTA;
-});
+// Compute spherical coords (azimuth & elevation)
+function getCameraSpherical() {
+    const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+    const dist = offset.length();
+    const azimuth = Math.atan2(offset.x, offset.z) * (180 / Math.PI);
+    const elevation = Math.asin(offset.y / dist) * (180 / Math.PI);
+    return { azimuth: azimuth.toFixed(1), elevation: elevation.toFixed(1), dist: dist.toFixed(1) };
+}
 
 function animate() {
     requestAnimationFrame(animate);
-
-    currentRotY += (targetRotY - currentRotY) * 0.06;
-    currentRotX += (targetRotX - currentRotX) * 0.06;
-
-    const spherical = new THREE.Spherical();
-    spherical.setFromVector3(camera.position);
-    const radius = spherical.radius;
-
-    const offset = new THREE.Vector3();
-    offset.setFromSphericalCoords(radius, Math.PI / 2 - currentRotX, currentRotY);
-    const desiredPos = TARGET.clone().add(offset);
-
-    camera.position.lerp(desiredPos, 0.08);
-    controls.target.lerp(TARGET, 0.06);
-
     controls.update();
     viewer.update();
     viewer.render();
+
+    const posEl = document.getElementById('cam-pos');
+    const fovEl = document.getElementById('cam-fov');
+    const azEl = document.getElementById('cam-azimuth');
+    const elevEl = document.getElementById('cam-elev');
+    const distEl = document.getElementById('cam-dist');
+
+    if (posEl) posEl.textContent = `📍 x:${camera.position.x.toFixed(1)} y:${camera.position.y.toFixed(1)} z:${camera.position.z.toFixed(1)}`;
+    if (fovEl) fovEl.textContent = `🔍 FOV: ${camera.fov.toFixed(0)}°`;
+    const sph = getCameraSpherical();
+    if (azEl) azEl.textContent = `🧭 Azimuth: ${sph.azimuth}°`;
+    if (elevEl) elevEl.textContent = `📐 Elevation: ${sph.elevation}°`;
+    if (distEl) distEl.textContent = `📏 Distance: ${sph.dist}`;
 }
 
 animate();
