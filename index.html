@@ -152,11 +152,11 @@
         <div class="container mx-auto px-6 relative z-10 text-center">
             <span class="inline-block text-[#B12B21] font-bold tracking-[0.5em] uppercase text-sm mb-6 opacity-0" id="hero-tag">Kia Ora • Digital Sovereignty</span>
             <h1 class="text-6xl md:text-9xl font-bold mb-8 leading-none opacity-0" id="hero-title">
-                Digital (v3) <br><span class="italic text-gradient font-serif">Resurrection</span>
+                Weka Pass <br><span class="italic text-gradient font-serif">Rock Art</span>
             </h1>
             <p class="text-lg md:text-xl text-white/60 max-w-3xl mx-auto mb-12 font-light tracking-wide opacity-0" id="hero-desc">
                 Specialists in photogrammetry, 3D fine modeling, and digital heritage preservation. 
-                Bridging ancient wisdom with future technology to bring history back to life.
+                Digital resurrection of one of New Zealand's most historically significant Māori rock art sites — now 600-1000 years old.
             </p>
             <div class="flex flex-col md:flex-row items-center justify-center gap-6 opacity-0" id="hero-cta">
                 <a href="#whakaaturanga" class="px-12 py-5 bg-[#B12B21] text-white rounded-full font-bold uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all transform hover:-translate-y-1">
@@ -172,19 +172,21 @@
     <!-- Interactive Showcase -->
     <section id="whakaaturanga" class="py-32 relative bg-[#0f0f0f]">
         <div class="container mx-auto px-6">
-            <div class="mb-20">
+            <div class="mb-16">
                 <div class="flex items-center space-x-4 mb-4">
                     <div class="h-[1px] w-20 bg-[#B12B21]"></div>
                     <span class="text-[#B12B21] font-bold tracking-widest uppercase text-sm italic">Whakaaturanga</span>
                 </div>
-                <h2 class="text-5xl md:text-7xl font-bold">The Digital <span class="text-white/30">Pou</span></h2>
+                <h2 class="text-5xl md:text-7xl font-bold">Weka Pass <span class="text-white/30 italic">Rock Art</span></h2>
             </div>
 
-            <div class="grid lg:grid-cols-12 gap-12 items-center">
+            <!-- Main content: 3D viewer + story -->
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+
+                <!-- 3D Viewer -->
                 <div class="lg:col-span-7 relative group">
                     <div class="absolute -inset-4 bg-gradient-to-tr from-[#B12B21]/20 to-transparent rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                    <!-- 3D Gaussian Splatting Viewer (Demo Model Test) -->
-                    <div id="scene-container" class="relative z-10 glass-effect" style="width:100%;height:70vh;border-radius:2rem;overflow:hidden;background:#0d0d0e;">
+                    <div id="scene-container" class="relative z-10 glass-effect" style="width:100%;height:65vh;border-radius:2rem;overflow:hidden;background:#0d0d0e;">
                         <div id="loader" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-20">
                             <div class="text-center">
                                 <div class="w-10 h-10 border-2 border-[#B12B21] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -192,39 +194,102 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="absolute top-8 left-8 z-20 flex flex-col space-y-2">
+                    <div class="absolute top-6 left-6 z-20">
                         <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-white/10">
-                            <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Rock Art</span>
-                            <span class="text-xl font-mono">118K Splats</span>
+                            <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Weka Pass Historic Reserve</span>
+                            <span class="text-lg font-mono">118K Splats · Interactive</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-5 space-y-10 pl-0 lg:pl-10">
-                    <div>
-                        <h3 class="text-3xl font-bold mb-6">Rock Art Heritage <br>Preserved in 3D</h3>
-                        <p class="text-white/50 leading-relaxed mb-8">
-                            Using advanced photogrammetry and Gaussian splatting technology, we capture cultural heritage with sub-millimeter precision. Every texture, pigment, and crack is digitally preserved for future generations.
+                <!-- Story Text -->
+                <div class="lg:col-span-5 space-y-8 pl-0 lg:pl-4">
+
+                    <!-- The Discovery -->
+                    <div class="border-l-2 border-[#B12B21]/40 pl-6">
+                        <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🏛️ The Discovery</h3>
+                        <p class="text-white/50 leading-relaxed text-sm">
+                            Tucked into the hills of North Canterbury, New Zealand, lies a limestone overhang that has witnessed centuries of history. The Weka Pass Historic Reserve was officially established in 1969 — but the stories written on its walls stretch back far longer.
                         </p>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="p-6 rounded-2xl border border-white/5 hover:border-[#B12B21]/50 transition-colors">
-                            <span class="text-3xl font-bold text-[#B12B21] block mb-2">12K</span>
-                            <span class="text-xs uppercase tracking-widest text-white/40">Raw Capture</span>
-                        </div>
-                        <div class="p-6 rounded-2xl border border-white/5 hover:border-[#B12B21]/50 transition-colors">
-                            <span class="text-3xl font-bold text-[#D4AF37] block mb-2">Neural</span>
-                            <span class="text-xs uppercase tracking-widest text-white/40">Re-shaping</span>
+
+                    <!-- Maori History -->
+                    <div class="border-l-2 border-[#B12B21]/40 pl-6">
+                        <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🎨 Ancient Canvas</h3>
+                        <p class="text-white/50 leading-relaxed text-sm">
+                            Māori were the first to call this place home — even if only briefly. They visited the area seasonally for <em class="text-white/70 not-italic">mahinga kai</em> (food gathering), hunting abundant birds including the now-extinct moa, as well as weka, kererū, and kākā. Under the shelter of the limestone overhang, they would rest by night — and leave their mark by day.
+                        </p>
+                        <p class="text-white/50 leading-relaxed text-sm mt-3">
+                            Using charcoal from their fires and red ochre (haematite), known as <em class="text-white/70 not-italic">kōkōwai</em>, they drew simple human figures, fish, and dogs on the limestone walls. Some were careful, deliberate works. Others — just as precious — were the carefree scribbles of daily life.
+                        </p>
+                    </div>
+
+                    <!-- Archaeological Investigation -->
+                    <div class="border-l-2 border-[#B12B21]/40 pl-6">
+                        <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🔬 First Study</h3>
+                        <p class="text-white/50 leading-relaxed text-sm">
+                            When European shepherds and farmers arrived, they too sheltered under the overhang — and inadvertently brought the drawings to wider attention. In 1876, Julius Haast, Director of Canterbury Museum, conducted the first scientific investigation. He commissioned artist T.S. Cousins to copy the main figures and excavated the shelter floor, unearthing flaked stone tools, charcoal, fire stones, and food remains. The evidence confirmed Māori occupation between <strong class="text-white/60">600–1,000 years ago</strong>.
+                        </p>
+                    </div>
+
+                    <!-- The Tragedy -->
+                    <div class="rounded-2xl p-6 bg-gradient-to-r from-[#B12B21]/10 to-transparent border border-[#B12B21]/30">
+                        <h3 class="text-xl font-bold text-[#B12B21] mb-2">⚠️ The Conservation Tragedy</h3>
+                        <p class="text-white/60 leading-relaxed text-sm">
+                            In 1929, at the direction of W.R.B. Oliver, Director of the Dominion Museum, the original drawings were overpainted in red and black house paint to make them "more visible." At the time, this seemed like a reasonable act of preservation. In hindsight, it is regarded as a catastrophe — the original figures, painted centuries ago with natural pigments, were buried forever beneath modern house paint, destroying their scientific and historic value irreversibly.
+                        </p>
+                    </div>
+
+                    <!-- Today -->
+                    <div class="border-l-2 border-[#D4AF37]/40 pl-6">
+                        <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🪨 Today</h3>
+                        <p class="text-white/50 leading-relaxed text-sm">
+                            A fence now stands floor-to-ceiling between visitors and the drawings. The 40-minute walk across private farmland — closed during lambing from 1 August to 1 October — offers time to consider what we nearly lost. This 3D model captures what remains: the limestone overhang, the overpainted figures, and the weight of a story still being written.
+                        </p>
+                        <div class="mt-4 flex flex-wrap gap-4 text-xs text-white/40">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#B12B21]"></div>
+                                Red ochre (kōkōwai)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-white"></div>
+                                Charcoal original
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#1a1a1a] border border-white/30"></div>
+                                Overpaint (1929)
+                            </div>
                         </div>
                     </div>
 
-                    <button class="w-full py-6 bg-white text-black rounded-2xl font-bold uppercase text-xs tracking-[0.3em] hover:bg-[#B12B21] hover:text-white transition-all">
-                        Initiate Project
-                    </button>
                 </div>
             </div>
+
+            <!-- Visit info strip -->
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-5 rounded-xl bg-white/5 border border-white/5 text-center">
+                    <div class="text-2xl mb-1">📍</div>
+                    <div class="text-xs uppercase tracking-wider text-white/30 mb-1">Location</div>
+                    <div class="text-sm font-bold text-white/70">North Canterbury, NZ</div>
+                </div>
+                <div class="p-5 rounded-xl bg-white/5 border border-white/5 text-center">
+                    <div class="text-2xl mb-1">🚶</div>
+                    <div class="text-xs uppercase tracking-wider text-white/30 mb-1">Walk</div>
+                    <div class="text-sm font-bold text-white/70">40 min each way</div>
+                </div>
+                <div class="p-5 rounded-xl bg-white/5 border border-white/5 text-center">
+                    <div class="text-2xl mb-1">📅</div>
+                    <div class="text-xs uppercase tracking-wider text-white/30 mb-1">Est.</div>
+                    <div class="text-sm font-bold text-white/70">Est. 1969</div>
+                </div>
+                <div class="p-5 rounded-xl bg-white/5 border border-white/5 text-center">
+                    <div class="text-2xl mb-1">⏰</div>
+                    <div class="text-xs uppercase tracking-wider text-white/30 mb-1">Open</div>
+                    <div class="text-sm font-bold text-white/70">Year-round*</div>
+                </div>
+            </div>
+            <p class="mt-4 text-xs text-white/20">*Closed 1 Aug – 1 Oct during lambing season. Dogs prohibited.</p>
+
         </div>
     </section>
 
