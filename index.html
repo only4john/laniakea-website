@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Version: 2026-03-17 v3 with Gaussian Splatting -->
-    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v3)</title>
+    <title>Laniakea Intelligence | 3D Demo Scene (v5 - Demo)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -196,7 +196,7 @@
                     <div class="absolute top-8 left-8 z-20 flex flex-col space-y-2">
                         <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-white/10">
                             <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Rock Art</span>
-                            <span class="text-xl font-mono">146K Splats</span>
+                            <span class="text-xl font-mono">Demo Scene</span>
                         </div>
                     </div>
                 </div>
@@ -365,143 +365,243 @@
             });
         }
     </script>
-    <!-- Gaussian Splatting 3D Viewer (Demo) -->
+    <!-- Simple 3D Demo Scene (v5) -->
     <script type="importmap">
     {
         "imports": {
             "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "gaussian-splats-3d": "https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.module.js"
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
     }
     </script>
     <script type="module">
 import * as THREE from 'three';
-import * as GaussianSplats3D from 'gaussian-splats-3d';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// 创建相机参数显示面板 v4.1
-function createDebugPanel() {
-  const panel = document.createElement('div');
-  panel.id = 'camera-debug-panel';
-  panel.style.cssText = `
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.85);
-    color: #00ff00;
-    font-family: monospace;
-    font-size: 14px;
-    padding: 15px;
-    border-radius: 8px;
-    z-index: 10000;
-    min-width: 240px;
-    border: 1px solid #333;
-  `;
-  panel.innerHTML = `
-    <div style="margin-bottom:8px;font-weight:bold;color:#fff;font-size:15px">📷 Camera Params (v4.9)</div>
-    <div id="cam-pos" style="margin:3px 0">Position: --</div>
-    <div id="cam-rot" style="margin:3px 0">Rotation: --</div>
-    <div id="cam-fov" style="margin:3px 0">FOV: --</div>
-    <div id="cam-zoom" style="margin:3px 0">Zoom: --</div>
-  `;
-  document.body.appendChild(panel);
-  return panel;
+// ============ Demo Scene Setup ============
+const container = document.getElementById('scene-container');
+const loader = document.getElementById('loader');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d0e);
+
+// Add subtle fog for depth
+scene.fog = new THREE.FogExp2(0x0d0d0e, 0.05);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(3, 2, 4);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// OrbitControls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 2;
+controls.maxDistance = 15;
+controls.target.set(0, 0, 0);
+
+// ============ Lighting ============
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+directionalLight.position.set(5, 10, 7);
+directionalLight.castShadow = true;
+scene.add(directionalLight);
+
+const pointLight1 = new THREE.PointLight(0xB12B21, 2, 10);
+pointLight1.position.set(-3, 2, -2);
+scene.add(pointLight1);
+
+const pointLight2 = new THREE.PointLight(0xD4AF37, 1.5, 10);
+pointLight2.position.set(3, -1, 3);
+scene.add(pointLight2);
+
+// ============ Main Central Sphere ============
+const sphereGeo = new THREE.SphereGeometry(1, 64, 64);
+const sphereMat = new THREE.MeshStandardMaterial({
+    color: 0xB12B21,
+    metalness: 0.3,
+    roughness: 0.4,
+    emissive: 0xB12B21,
+    emissiveIntensity: 0.1
+});
+const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+sphere.castShadow = true;
+sphere.receiveShadow = true;
+scene.add(sphere);
+
+// ============ Wireframe Overlay ============
+const wireGeo = new THREE.SphereGeometry(1.01, 32, 32);
+const wireMat = new THREE.MeshBasicMaterial({
+    color: 0xD4AF37,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.15
+});
+const wireSphere = new THREE.Mesh(wireGeo, wireMat);
+scene.add(wireSphere);
+
+// ============ Orbiting Rings (Kowhaiwhai inspired) ============
+const ringGeo = new THREE.TorusGeometry(1.6, 0.015, 16, 100);
+const ring1 = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.3
+}));
+ring1.rotation.x = Math.PI / 3;
+scene.add(ring1);
+
+const ring2 = new THREE.Mesh(
+    new THREE.TorusGeometry(2.0, 0.01, 16, 100),
+    new THREE.MeshStandardMaterial({ color: 0x2D5A27, emissive: 0x2D5A27, emissiveIntensity: 0.3 })
+);
+ring2.rotation.x = -Math.PI / 4;
+ring2.rotation.z = Math.PI / 6;
+scene.add(ring2);
+
+const ring3 = new THREE.Mesh(
+    new THREE.TorusGeometry(1.3, 0.01, 16, 80),
+    new THREE.MeshStandardMaterial({ color: 0xE5E1DA, emissive: 0xE5E1DA, emissiveIntensity: 0.2 })
+);
+ring3.rotation.x = Math.PI / 2;
+ring3.rotation.y = Math.PI / 5;
+scene.add(ring3);
+
+// ============ Small Orbiting Spheres ============
+const smallSpheres = [];
+for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI * 2;
+    const r = 2.5;
+    const smallSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 16, 16),
+        new THREE.MeshStandardMaterial({
+            color: [0xB12B21, 0xD4AF37, 0x2D5A27, 0xE5E1DA, 0xB12B21][i],
+            emissive: [0xB12B21, 0xD4AF37, 0x2D5A27, 0xE5E1DA, 0xB12B21][i],
+            emissiveIntensity: 0.5
+        })
+    );
+    smallSphere.userData = { angle, r, speed: 0.3 + Math.random() * 0.4 };
+    smallSphere.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+    scene.add(smallSphere);
+    smallSpheres.push(smallSphere);
 }
 
-// 更新相机参数显示 v4.3 - 兼容多种获取相机方式
-function updateDebugPanel(viewer, camera) {
-  let activeCamera = null;
-  
-  // 尝试多种方式获取相机
-  if (viewer.getCamera) {
-    activeCamera = viewer.getCamera();
-  }
-  if (!activeCamera && viewer.camera) {
-    activeCamera = viewer.camera;
-  }
-  if (!activeCamera) {
-    activeCamera = camera; // 用我们创建的相机
-  }
-  
-  if (!activeCamera) return;
-  
-  const pos = activeCamera.position;
-  const rot = activeCamera.rotation;
-  
-  const posEl = document.getElementById('cam-pos');
-  const rotEl = document.getElementById('cam-rot');
-  const fovEl = document.getElementById('cam-fov');
-  const zoomEl = document.getElementById('cam-zoom');
-  
-  if (posEl) posEl.textContent = `Position: x:${pos.x.toFixed(2)}, y:${pos.y.toFixed(2)}, z:${pos.z.toFixed(2)}`;
-  if (rotEl) rotEl.textContent = `Rotation: x:${rot.x.toFixed(2)}, y:${rot.y.toFixed(2)}, z:${rot.z.toFixed(2)}`;
-  if (fovEl) fovEl.textContent = `FOV: ${activeCamera.fov.toFixed(1)}`;
-  if (zoomEl) zoomEl.textContent = `Zoom: ${activeCamera.zoom.toFixed(1)}`;
+// ============ Particle Field (Stars) ============
+const particleCount = 2000;
+const particleGeo = new THREE.BufferGeometry();
+const positions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 5 + Math.random() * 10;
+    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[i * 3 + 2] = r * Math.cos(phi);
 }
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const particleMat = new THREE.PointsMaterial({ color: 0xE5E1DA, size: 0.03, transparent: true, opacity: 0.6 });
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
 
-async function initViewer() {
-  const container = document.getElementById('scene-container');
-  const loader = document.getElementById('loader');
-  
-  console.log('Starting Gaussian Splatting demo...');
+// ============ Ground Plane (subtle) ============
+const groundGeo = new THREE.PlaneGeometry(20, 20);
+const groundMat = new THREE.MeshStandardMaterial({
+    color: 0x0d0d0e,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -2;
+ground.receiveShadow = true;
+scene.add(ground);
 
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0d0d0e);
+// ============ Info Panel ============
+function createInfoPanel() {
+    const panel = document.createElement('div');
+    panel.style.cssText = `
+        position: fixed; top: 10px; right: 10px;
+        background: rgba(0,0,0,0.85); color: #E5E1DA;
+        font-family: monospace; font-size: 13px;
+        padding: 15px; border-radius: 8px; z-index: 10000;
+        min-width: 220px; border: 1px solid rgba(177,43,33,0.4);
+        backdrop-filter: blur(10px);
+    `;
+    panel.innerHTML = `
+        <div style="color:#D4AF37;font-weight:bold;margin-bottom:8px">🎨 Demo Scene (v5)</div>
+        <div style="color:#888;font-size:11px;margin-bottom:10px">Simple 3D geometry demo</div>
+        <div id="demo-pos" style="margin:2px 0">📍 Position: --</div>
+        <div id="demo-rot" style="margin:2px 0">🔄 Rotation: --</div>
+        <div style="margin-top:10px;font-size:10px;color:#555">
+            🖱️ Drag to rotate | Scroll to zoom
+        </div>
+    `;
+    document.body.appendChild(panel);
+    return panel;
+}
+const infoPanel = createInfoPanel();
 
-  const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera.position.set(0, 0, 0);
-  camera.rotation.set(3.07, -0.36, 3.12);
+// ============ Animation Loop ============
+const clock = new THREE.Clock();
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  container.appendChild(renderer.domElement);
-
-  const viewer = new GaussianSplats3D.Viewer({
-    showStatus: false,
-    sharedMemoryForWorkers: false,
-    selfContained: false,
-    renderer,
-    camera,
-    scene,
-    useBuiltInControls: true
-  });
-
-  try {
-    await viewer.addSplatScene('./rock_art.ply', {
-      progressiveLoad: true,
-      showLoadingUI: false
-    });
-    console.log('Demo model loaded!');
-    
-    if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => loader.style.display = 'none', 500);
-    }
-  } catch (error) {
-    console.error('Failed to load demo:', error);
-    if (loader) loader.innerHTML = '<p style="color:red">Failed to load model</p>';
-  }
-
-  // 创建调试面板 v4.2
-  createDebugPanel();
-
-  function animate() {
+function animate() {
     requestAnimationFrame(animate);
-    // 更新调试面板 - 传入 viewer 获取真实相机
-    updateDebugPanel(viewer, camera);
-    viewer.update();
-    viewer.render();
-  }
-  animate();
+    const t = clock.getElapsedTime();
 
-  window.addEventListener('resize', () => {
+    // Rotate main sphere
+    sphere.rotation.y = t * 0.3;
+    wireSphere.rotation.y = -t * 0.15;
+    wireSphere.rotation.x = t * 0.1;
+
+    // Animate rings
+    ring1.rotation.z = t * 0.2;
+    ring2.rotation.y = t * 0.15;
+    ring3.rotation.x = t * 0.25;
+
+    // Orbit small spheres
+    smallSpheres.forEach((s, i) => {
+        s.userData.angle += s.userData.speed * 0.01;
+        s.position.x = Math.cos(s.userData.angle) * s.userData.r;
+        s.position.z = Math.sin(s.userData.angle) * s.userData.r;
+        s.position.y = Math.sin(t * 2 + i) * 0.3;
+    });
+
+    // Animate lights
+    pointLight1.position.x = Math.sin(t * 0.7) * 4;
+    pointLight1.position.z = Math.cos(t * 0.7) * 4;
+    pointLight2.position.x = Math.cos(t * 0.5) * 3;
+    pointLight2.position.z = Math.sin(t * 0.5) * 3;
+
+    // Update info panel
+    const posEl = document.getElementById('demo-pos');
+    const rotEl = document.getElementById('demo-rot');
+    if (posEl) posEl.textContent = `📍 cam: x:${camera.position.x.toFixed(1)} y:${camera.position.y.toFixed(1)} z:${camera.position.z.toFixed(1)}`;
+    if (rotEl) rotEl.textContent = `🔄 target: x:${controls.target.x.toFixed(1)} y:${controls.target.y.toFixed(1)} z:${controls.target.z.toFixed(1)}`;
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// Hide loader
+if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 500);
+}
+
+// Handle resize
+window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
-  });
-}
+});
 
-initViewer();
+animate();
     </script>
 </body>
 </html>
