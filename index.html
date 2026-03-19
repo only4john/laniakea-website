@@ -387,7 +387,7 @@ const loader = document.getElementById('loader');
 const TARGET = new THREE.Vector3(-9.9, 2.4, -26.0);
 const BASE_RADIUS = 2.7;          // exact distance from target
 const BASE_ELEV = -68.2;           // degrees, elevation angle
-const BASE_AZIM = 0.0;  // flipped 180° to see front           // degrees, azimuth angle
+const BASE_AZIM = 180.0;  // rotated 180° around Z-axis
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0d0d0e);
