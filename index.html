@@ -432,9 +432,11 @@ controls.dampingFactor = 0.05;
 controls.screenSpacePanning = true;
 controls.minDistance = 0.5;
 controls.maxDistance = 10;
-// Lock elevation: polar angle = 158.2° (elevation = -68.2°)
-controls.minPolarAngle = (158.2 / 180) * Math.PI;
-controls.maxPolarAngle = (158.2 / 180) * Math.PI;
+// Elevation range: -68° ± 15° → polar 143° ~ 173°
+const BASE_POLAR = 158.2;  // degrees, polar angle (from +Y axis)
+const ELEV_RANGE = 15.0;  // ±15 degrees
+controls.minPolarAngle = ((BASE_POLAR - ELEV_RANGE) / 180) * Math.PI;  // = 143.2°
+controls.maxPolarAngle = ((BASE_POLAR + ELEV_RANGE) / 180) * Math.PI;  // = 173.2°;
 // Azimuth limits: ±15° around base -180° → clamp to [165°, -165°]
 controls.minAzimuthAngle = (165 / 180) * Math.PI;   // = 165°
 controls.maxAzimuthAngle = (-165 / 180) * Math.PI;  // = -165° (= 195°)
@@ -448,21 +450,22 @@ controls.update();
 
 // Hover-based rotation: mouse move without pressing
 const AZIMUTH_RANGE = 15.0;  // ±15 degrees
-let baseMouseX = null;
 let currentAzimuth = 0;
+let currentElevation = 0;
 let isHovering = false;
 
-container.addEventListener('mouseenter', () => { isHovering = true; baseMouseX = null; });
+container.addEventListener('mouseenter', () => { isHovering = true; });
 container.addEventListener('mouseleave', () => {
     isHovering = false;
-    baseMouseX = null;
 });
 container.addEventListener('mousemove', (e) => {
     if (!isHovering) return;
+    // Horizontal: azimuth
     const nx = ((e.clientX - window.innerWidth / 2) / (window.innerWidth / 2));
-    const delta = nx * AZIMUTH_RANGE;
-    const desiredAz = -delta;  // invert: mouse right → rotate left
-    currentAzimuth = Math.max(-AZIMUTH_RANGE, Math.min(AZIMUTH_RANGE, desiredAz));
+    currentAzimuth = -nx * AZIMUTH_RANGE;
+    // Vertical: elevation
+    const ny = ((e.clientY - window.innerHeight / 2) / (window.innerHeight / 2));
+    currentElevation = ny * ELEV_RANGE;
 });
 
 const viewer = new GaussianSplats3D.Viewer({
@@ -525,14 +528,17 @@ _baseSph.setFromVector3(DEFAULT_CAM_POS.clone().sub(TARGET));
 function animate() {
     requestAnimationFrame(animate);
 
-    // Apply hover azimuth offset to camera position
-    // Smooth lerp azimuth back to 0 when not hovering
+    // Smooth lerp back to center when not hovering
     if (!isHovering) {
         currentAzimuth += (0 - currentAzimuth) * 0.08;
+        currentElevation += (0 - currentElevation) * 0.08;
     }
     const azOffset = (currentAzimuth * Math.PI / 180);
+    const elevOffset = (currentElevation * Math.PI / 180);
     // _baseSph.phi = polar angle from +Y, _baseSph.theta = azimuth from +X
-    const polar = _baseSph.phi;              // locked at 158.2°
+    let polar = _baseSph.phi + elevOffset;   // add elevation offset (constrained by controls)
+    polar = Math.max(((BASE_POLAR - ELEV_RANGE) / 180) * Math.PI,
+                     Math.min(((BASE_POLAR + ELEV_RANGE) / 180) * Math.PI, polar));
     let theta = _baseSph.theta + azOffset;   // add azimuth offset
     // Normalize theta to [0, 2π]
     while (theta < 0) theta += Math.PI * 2;
