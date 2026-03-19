@@ -433,6 +433,11 @@ controls.minDistance = 0.1;
 controls.maxDistance = 100;
 controls.target.copy(TARGET);
 controls.update();
+// Limit rotation range: ±15° azimuth (total 30°), fixed elevation
+controls.minAzimuthAngle = (-15 / 180) * Math.PI;
+controls.maxAzimuthAngle = (15 / 180) * Math.PI;
+controls.minPolarAngle = (21.8 / 180) * Math.PI;   // keep current elevation (~-68°)
+controls.maxPolarAngle = (114.2 / 180) * Math.PI;   // same elevation range
 
 const viewer = new GaussianSplats3D.Viewer({
     showStatus: false,
