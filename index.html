@@ -425,19 +425,45 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// OrbitControls for FULL 3D freedom
+// OrbitControls: scroll=zoom, right-click=pan
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.minDistance = 0.1;
-controls.maxDistance = 100;
+controls.screenSpacePanning = true;
+controls.minDistance = 0.5;
+controls.maxDistance = 10;
+// Lock elevation: polar angle = 158.2° (elevation = -68.2°)
+controls.minPolarAngle = (158.2 / 180) * Math.PI;
+controls.maxPolarAngle = (158.2 / 180) * Math.PI;
+// Azimuth limits: ±15° around base -180° → clamp to [165°, -165°]
+controls.minAzimuthAngle = (165 / 180) * Math.PI;   // = 165°
+controls.maxAzimuthAngle = (-165 / 180) * Math.PI;  // = -165° (= 195°)
 controls.target.copy(TARGET);
+controls.mouseButtons = {
+    LEFT: null,  // disable left-drag
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.PAN
+};
 controls.update();
-// Limit rotation range: ±15° azimuth (total 30°), fixed elevation
-controls.minAzimuthAngle = (-15 / 180) * Math.PI;
-controls.maxAzimuthAngle = (15 / 180) * Math.PI;
-controls.minPolarAngle = (21.8 / 180) * Math.PI;   // keep current elevation (~-68°)
-controls.maxPolarAngle = (114.2 / 180) * Math.PI;   // same elevation range
+
+// Hover-based rotation: mouse move without pressing
+const AZIMUTH_RANGE = 15.0;  // ±15 degrees
+let baseMouseX = null;
+let currentAzimuth = 0;
+let isHovering = false;
+
+container.addEventListener('mouseenter', () => { isHovering = true; baseMouseX = null; });
+container.addEventListener('mouseleave', () => {
+    isHovering = false;
+    baseMouseX = null;
+});
+container.addEventListener('mousemove', (e) => {
+    if (!isHovering) return;
+    const nx = ((e.clientX - window.innerWidth / 2) / (window.innerWidth / 2));
+    const delta = nx * AZIMUTH_RANGE;
+    const desiredAz = -delta;  // invert: mouse right → rotate left
+    currentAzimuth = Math.max(-AZIMUTH_RANGE, Math.min(AZIMUTH_RANGE, desiredAz));
+});
 
 const viewer = new GaussianSplats3D.Viewer({
     showStatus: false,
@@ -492,8 +518,28 @@ function getCameraSpherical() {
     return { azimuth: azimuth.toFixed(1), elevation: elevation.toFixed(1), dist: dist.toFixed(1) };
 }
 
+// Precompute base spherical from DEFAULT_CAM_POS
+const _baseSph = new THREE.Spherical();
+_baseSph.setFromVector3(DEFAULT_CAM_POS.clone().sub(TARGET));
+
 function animate() {
     requestAnimationFrame(animate);
+
+    // Apply hover azimuth offset to camera position
+    // Smooth lerp azimuth back to 0 when not hovering
+    if (!isHovering) {
+        currentAzimuth += (0 - currentAzimuth) * 0.08;
+    }
+    const azOffset = (currentAzimuth * Math.PI / 180);
+    // _baseSph.phi = polar angle from +Y, _baseSph.theta = azimuth from +X
+    const polar = _baseSph.phi;              // locked at 158.2°
+    let theta = _baseSph.theta + azOffset;   // add azimuth offset
+    // Normalize theta to [0, 2π]
+    while (theta < 0) theta += Math.PI * 2;
+    while (theta >= Math.PI * 2) theta -= Math.PI * 2;
+    camera.position.setFromSphericalCoords(_baseSph.radius, polar, theta);
+    camera.position.add(TARGET);
+
     controls.update();
     viewer.update();
     viewer.render();
