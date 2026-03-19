@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Version: 2026-03-17 v3 with Gaussian Splatting -->
-    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v9)</title>
+    <title>Laniakea Intelligence | 3D Cultural Reconstruction (v8)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -365,7 +365,7 @@
             });
         }
     </script>
-    <!-- Gaussian Splatting 3D Viewer (v9) -->
+    <!-- Gaussian Splatting 3D Viewer (v8) -->
     <script type="importmap">
     {
         "imports": {
@@ -383,26 +383,21 @@ import * as GaussianSplats3D from 'gaussian-splats-3d';
 const container = document.getElementById('scene-container');
 const loader = document.getElementById('loader');
 
-// === Camera setup ===
 const TARGET = new THREE.Vector3(-9.9, 2.4, -26.0);
-const BASE_RADIUS = 2.7;          // exact distance from target
-const BASE_ELEV = -68.2;           // degrees, elevation angle
-const BASE_AZIM = 180.0;  // rotated 180° around Z-axis
+const DEFAULT_CAM_POS = new THREE.Vector3(-9.9, -0.1, -27.0);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0d0d0e);
 
 const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-// Place camera EXACTLY at distance 2.7 from target
-camera.position.setFromSphericalCoords(BASE_RADIUS, (BASE_ELEV + 90) * Math.PI / 180, BASE_AZIM * Math.PI / 180);
-camera.position.add(TARGET);
+camera.position.copy(DEFAULT_CAM_POS);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// MapControls: scroll=zoom, right-click=pan
+// MapControls: scroll=zoom, right-click=pan, left-click disabled
 const controls = new MapControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -424,8 +419,7 @@ const viewer = new GaussianSplats3D.Viewer({
     renderer,
     camera,
     scene,
-    useBuiltInControls: false,
-    splatRenderScale: 'adaptive'
+    useBuiltInControls: false
 });
 
 viewer.addSplatScene('https://raw.githubusercontent.com/only4john/laniakea-website/b98f84b/rock_art.ply', {
@@ -441,41 +435,44 @@ viewer.addSplatScene('https://raw.githubusercontent.com/only4john/laniakea-websi
     if (loader) loader.innerHTML = '<p style="color:#B12B21;text-align:center;padding:20px">Failed to load model</p>';
 });
 
-// === Mouse hover orbit (±10°) - FIXED: keeps exact radius ===
-const MAX_DELTA = 10; // degrees
-let targetDeltaAzim = 0, targetDeltaElev = 0;
-let currentDeltaAzim = 0, currentDeltaElev = 0;
+// --- Mouse hover → smooth orbit (±10°) ---
+const MAX_DELTA = (10 / 180) * Math.PI;
+let targetRotY = 0, targetRotX = 0;
+let currentRotY = 0, currentRotX = 0;
 let isHovering = false;
 
 container.addEventListener('mouseenter', () => { isHovering = true; });
 container.addEventListener('mouseleave', () => {
     isHovering = false;
-    targetDeltaAzim = 0;
-    targetDeltaElev = 0;
+    targetRotY = 0;
+    targetRotX = 0;
 });
 container.addEventListener('mousemove', (e) => {
     if (!isHovering) return;
     const rect = container.getBoundingClientRect();
     const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    targetDeltaAzim = nx * MAX_DELTA;
-    targetDeltaElev = ny * MAX_DELTA;
+    targetRotY = nx * MAX_DELTA;
+    targetRotX = -ny * MAX_DELTA;
 });
 
 function animate() {
     requestAnimationFrame(animate);
 
-    // Smooth lerp
-    currentDeltaAzim += (targetDeltaAzim - currentDeltaAzim) * 0.06;
-    currentDeltaElev += (targetDeltaElev - currentDeltaElev) * 0.06;
+    currentRotY += (targetRotY - currentRotY) * 0.06;
+    currentRotX += (targetRotX - currentRotX) * 0.06;
 
-    // Compute camera position at EXACT radius 2.7 with hover offsets
-    const az = (BASE_AZIM + currentDeltaAzim) * Math.PI / 180;
-    const el = (BASE_ELEV + currentDeltaElev + 90) * Math.PI / 180;
-    camera.position.setFromSphericalCoords(BASE_RADIUS, el, az);
-    camera.position.add(TARGET);
+    const spherical = new THREE.Spherical();
+    spherical.setFromVector3(camera.position);
+    const radius = spherical.radius;
 
+    const offset = new THREE.Vector3();
+    offset.setFromSphericalCoords(radius, Math.PI / 2 - currentRotX, currentRotY);
+    const desiredPos = TARGET.clone().add(offset);
+
+    camera.position.lerp(desiredPos, 0.08);
     controls.target.lerp(TARGET, 0.06);
+
     controls.update();
     viewer.update();
     viewer.render();
