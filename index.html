@@ -180,32 +180,48 @@
                 <h2 class="text-5xl md:text-7xl font-bold">Weka Pass <span class="text-white/30 italic">Rock Art</span></h2>
             </div>
 
-            <!-- Main content: 3D viewer + story -->
-            <div class="grid lg:grid-cols-12 gap-8 items-start">
-
-                <!-- 3D Viewer -->
-                <div class="lg:col-span-7 relative group">
-                    <div class="absolute -inset-4 bg-gradient-to-tr from-[#B12B21]/20 to-transparent rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                    <div id="scene-container" class="relative z-10 glass-effect" style="width:100%;height:65vh;border-radius:2rem;overflow:hidden;background:#0d0d0e;">
-                        <div id="loader" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-20">
-                            <div class="text-center">
-                                <div class="w-10 h-10 border-2 border-[#B12B21] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                <p class="text-xs uppercase tracking-widest text-white/50">Loading Rock Art Model...</p>
-                            </div>
+            <!-- Full-width 3D Viewer -->
+            <div class="relative group mb-12">
+                <div class="absolute -inset-4 bg-gradient-to-tr from-[#B12B21]/20 to-transparent rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                <div id="scene-container" class="relative z-10 glass-effect" style="width:100%;height:65vh;border-radius:2rem;overflow:hidden;background:#0d0d0e;">
+                    <div id="loader" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                        <div class="text-center">
+                            <div class="w-10 h-10 border-2 border-[#B12B21] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-xs uppercase tracking-widest text-white/50">Loading Rock Art Model...</p>
                         </div>
                     </div>
-                    <div class="absolute top-6 left-6 z-20">
-                        <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-white/10">
-                            <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Weka Pass Historic Reserve</span>
-                            <span class="text-lg font-mono">118K Splats · Interactive</span>
+                </div>
+                <div class="absolute top-6 left-6 z-20">
+                    <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-white/10">
+                        <span class="text-[10px] uppercase text-[#B12B21] block font-bold">Weka Pass Historic Reserve</span>
+                        <span class="text-lg font-mono">118K Splats · Interactive</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painting (left) + Story (right) -->
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+
+                <!-- Historical Painting -->
+                <div class="lg:col-span-4">
+                    <div class="relative rounded-2xl overflow-hidden border border-white/10">
+                        <img
+                            src="https://files.catbox.moe/2m2xoa.png"
+                            alt="Māori at limestone shelter, Weka Pass — painted by Thomas Selby Cousins, commissioned by Julius Haast, 1876"
+                            class="w-full object-cover"
+                            style="height:70vh;object-position:center top;"
+                        >
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12">
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <em class="text-white/80">"Māori at the limestone shelter, Weka Pass"</em> — painted by Thomas Selby Cousins, commissioned by Julius Haast, Canterbury Museum, 1876. Canterbury Museum, NZ.
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Story Text -->
-                <div class="lg:col-span-5 space-y-8 pl-0 lg:pl-4">
+                <div class="lg:col-span-8 space-y-6">
 
-                    <!-- The Discovery -->
                     <div class="border-l-2 border-[#B12B21]/40 pl-6">
                         <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🏛️ The Discovery</h3>
                         <p class="text-white/50 leading-relaxed text-sm">
@@ -213,38 +229,31 @@
                         </p>
                     </div>
 
-                    <!-- Maori History -->
                     <div class="border-l-2 border-[#B12B21]/40 pl-6">
                         <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🎨 Ancient Canvas</h3>
                         <p class="text-white/50 leading-relaxed text-sm">
-                            Māori were the first to call this place home — even if only briefly. They visited the area seasonally for <em class="text-white/70 not-italic">mahinga kai</em> (food gathering), hunting abundant birds including the now-extinct moa, as well as weka, kererū, and kākā. Under the shelter of the limestone overhang, they would rest by night — and leave their mark by day.
-                        </p>
-                        <p class="text-white/50 leading-relaxed text-sm mt-3">
-                            Using charcoal from their fires and red ochre (haematite), known as <em class="text-white/70 not-italic">kōkōwai</em>, they drew simple human figures, fish, and dogs on the limestone walls. Some were careful, deliberate works. Others — just as precious — were the carefree scribbles of daily life.
+                            Māori were the first to call this place home — even if only briefly. They visited seasonally for <em class="text-white/70 not-italic">mahinga kai</em> (food gathering), hunting moa, weka, kererū, and kākā. Under the limestone shelter, they rested by night and left their marks by day — using charcoal from fires and red ochre (<em class="text-white/70 not-italic">kōkōwai</em>) to depict human figures, fish, and dogs. Some were carefully composed; others were carefree scribbles of daily life.
                         </p>
                     </div>
 
-                    <!-- Archaeological Investigation -->
                     <div class="border-l-2 border-[#B12B21]/40 pl-6">
                         <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🔬 First Study</h3>
                         <p class="text-white/50 leading-relaxed text-sm">
-                            When European shepherds and farmers arrived, they too sheltered under the overhang — and inadvertently brought the drawings to wider attention. In 1876, Julius Haast, Director of Canterbury Museum, conducted the first scientific investigation. He commissioned artist T.S. Cousins to copy the main figures and excavated the shelter floor, unearthing flaked stone tools, charcoal, fire stones, and food remains. The evidence confirmed Māori occupation between <strong class="text-white/60">600–1,000 years ago</strong>.
+                            When European settlers arrived, they too sheltered under the overhang — and brought the drawings to wider attention. In 1876, Julius Haast, Director of Canterbury Museum, conducted the first scientific investigation. He commissioned artist Thomas Selby Cousins to copy the main figures and excavated the shelter floor, unearthing stone tools, charcoal, and food remains — confirming Māori occupation between <strong class="text-white/60">600–1,000 years ago</strong>.
                         </p>
                     </div>
 
-                    <!-- The Tragedy -->
                     <div class="rounded-2xl p-6 bg-gradient-to-r from-[#B12B21]/10 to-transparent border border-[#B12B21]/30">
                         <h3 class="text-xl font-bold text-[#B12B21] mb-2">⚠️ The Conservation Tragedy</h3>
                         <p class="text-white/60 leading-relaxed text-sm">
-                            In 1929, at the direction of W.R.B. Oliver, Director of the Dominion Museum, the original drawings were overpainted in red and black house paint to make them "more visible." At the time, this seemed like a reasonable act of preservation. In hindsight, it is regarded as a catastrophe — the original figures, painted centuries ago with natural pigments, were buried forever beneath modern house paint, destroying their scientific and historic value irreversibly.
+                            In 1929, at the direction of W.R.B. Oliver of the Dominion Museum, the original drawings were overpainted in red and black house paint to make them "more visible." It seemed reasonable at the time. In hindsight, it is regarded as a catastrophe — centuries-old natural pigments were buried forever beneath modern paint, irreversibly destroying their scientific and historic value.
                         </p>
                     </div>
 
-                    <!-- Today -->
                     <div class="border-l-2 border-[#D4AF37]/40 pl-6">
                         <h3 class="text-xl font-bold text-[#D4AF37] mb-2">🪨 Today</h3>
                         <p class="text-white/50 leading-relaxed text-sm">
-                            A fence now stands floor-to-ceiling between visitors and the drawings. The 40-minute walk across private farmland — closed during lambing from 1 August to 1 October — offers time to consider what we nearly lost. This 3D model captures what remains: the limestone overhang, the overpainted figures, and the weight of a story still being written.
+                            A fence now separates visitors from the drawings. The 40-minute walk across private farmland — closed 1 August to 1 October during lambing — offers time to absorb the weight of what we nearly lost. This 3D model captures what remains: the limestone overhang, the overpainted figures, and the story still unfolding.
                         </p>
                         <div class="mt-4 flex flex-wrap gap-4 text-xs text-white/40">
                             <div class="flex items-center gap-2">
@@ -261,7 +270,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -289,29 +297,9 @@
                 </div>
             </div>
             <p class="mt-4 text-xs text-white/20">*Closed 1 Aug – 1 Oct during lambing season. Dogs prohibited.</p>
-
-            <!-- Historical Painting -->
-            <div class="mt-12">
-                <div class="relative rounded-2xl overflow-hidden border border-white/10">
-                    <img
-                        src="https://files.catbox.moe/2m2xoa.png"
-                        alt="Māori at limestone shelter, Weka Pass — painted by Thomas Selby Cousins, commissioned by Julius Haast, 1876"
-                        class="w-full object-cover"
-                        style="max-height: 50vh;"
-                    >
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6 pt-16">
-                        <p class="text-sm text-white/70 leading-relaxed">
-                            <strong class="text-white/90">"Māori at the limestone shelter, Weka Pass"</strong> — painted by <em class="text-white/80">Thomas Selby Cousins</em>, commissioned by <em class="text-white/80">Julius Haast</em>, Director of Canterbury Museum, 1876. The work captures a group of Māori before the natural limestone overhang, with drawings of canoes and fish visible beneath the shelter. A large proportion of South Island Māori rock art was produced on limestone shelters like this one.
-                        </p>
-                    </div>
-                </div>
-                <p class="text-xs text-white/20 mt-3 italic">Artwork: Canterbury Museum, NZ · Thomas Selby Cousins (1841–1899)</p>
-            </div>
-
         </div>
     </section>
 
-    <!-- Tech Process -->
     <section id="technology" class="py-32 bg-black overflow-hidden">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-end mb-24">
